@@ -168,10 +168,10 @@ function Header({ step, steps }) {
   return (
     <div className="header">
       <div className="brandRow">
-        <div className="monogram">EV</div>
+        <div className="monogram">CS</div>
         <div>
-          <div className="brandName">Espaço Elaine Vaz</div>
-          <div className="brandSub">Beauty Salon</div>
+          <div className="brandName">Carol Sampaio</div>
+          <div className="brandSub">Onde há uma mulher confiante, há brilho</div>
         </div>
       </div>
       <div className="arcWrap" aria-hidden="true">
