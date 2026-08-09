@@ -80,22 +80,26 @@ export default function App() {
 
   async function handleConfirm() {
     const dateKey = toDateKey(viewDate.getFullYear(), viewDate.getMonth(), selectedDay);
-    await createBooking({
-      usuarioId: user.uid,
-      servico: service,
-      dateKey,
-      dateLabel,
-      horario: selectedTime,
-    });
-    setWhatsappLink(
-      buildWhatsappConfirmationLink({
-        serviceName: service.name,
+    try {
+      await createBooking({
+        usuarioId: user.uid,
+        servico: service,
+        dateKey,
         dateLabel,
-        time: selectedTime,
-        clientName: user.displayName,
-      })
-    );
-    setStep(3);
+        horario: selectedTime,
+      });
+      setWhatsappLink(
+        buildWhatsappConfirmationLink({
+          serviceName: service.name,
+          dateLabel,
+          time: selectedTime,
+          clientName: user.displayName,
+        })
+      );
+      setStep(3);
+    } catch (err) {
+      alert("Não foi possível confirmar o agendamento. Tente novamente em instantes.");
+    }
   }
 
   const steps = ["Entrar", "Serviço", "Horário", "Confirmar"];
