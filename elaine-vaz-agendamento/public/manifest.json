@@ -1,0 +1,23 @@
+{
+  "name": "Carol Sampaio - Agendamento",
+  "short_name": "Carol Sampaio",
+  "description": "Agende seu horário com a Carol Sampaio",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0B0A09",
+  "theme_color": "#0B0A09",
+  "icons": [
+    {
+      "src": "/logo-carol-sampaio.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/logo-carol-sampaio.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
