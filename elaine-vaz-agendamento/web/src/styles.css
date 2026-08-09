@@ -10,7 +10,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   background: radial-gradient(circle at 30% 0%, #1A1510 0%, #0B0A09 55%);
   display: flex;
   justify-content: center;
-  padding: 28px 14px;.stepCenter
+  padding: 28px 14px;
   font-family: 'Manrope', sans-serif;
 }
 .frame {
