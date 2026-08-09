@@ -209,7 +209,7 @@ function Header({ step, steps }) {
 function LoginStep({ onLogin }) {
   return (
     <div className="stepCenter">
-      <Sparkles size={28} color="#C9A24B" style={{ marginBottom: 14 }} />
+      <img src="/logo-carol-sampaio.png" alt="Carol Sampaio" className="loginLogo" />
       <h1 className="h1">{"Beleza que você vê,\nsaúde que você sente."}</h1>
       <p className="pMuted">Entre com sua conta Google para marcar seu horário em segundos.</p>
       <button className="googleBtn" onClick={onLogin}>
