@@ -10,7 +10,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   background: radial-gradient(circle at 30% 0%, #1A1510 0%, #0B0A09 55%);
   display: flex;
   justify-content: center;
-  padding: 28px 14px;
+  padding: 28px 14px;.stepCenter
   font-family: 'Manrope', sans-serif;
 }
 .frame {
@@ -37,6 +37,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 .arcLabel { font-size: 10.5px; letter-spacing: 0.2px; transition: color 300ms ease; }
 .body { padding: 24px 22px 26px; }
 .stepCenter { text-align: center; display: flex; flex-direction: column; align-items: center; }
+.loginLogo { width: 128px; max-width: 60%; margin-bottom: 18px; }
 .h1 {
   font-family: 'Cormorant Garamond', serif; color: #F3ECDD; font-size: 26px;
   line-height: 1.25; font-weight: 600; margin: 0 0 10px; white-space: pre-line;
