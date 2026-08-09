@@ -5,43 +5,61 @@ import { db } from "../firebase";
 // Retorna os horários já reservados para uma data específica (formato "YYYY-MM-DD")
 export function useOccupiedSlots() {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
   const fetchOccupied = useCallback(async (dateKey) => {
     setLoading(true);
-    const q = query(
-      collection(db, "agendamentos"),
-      where("dataKey", "==", dateKey),
-      where("status", "in", ["pendente", "confirmado"])
-    );
-    const snap = await getDocs(q);
-    setLoading(false);
-    return snap.docs.map((d) => d.data().horario);
+    setError(null);
+    try {
+      const q = query(
+        collection(db, "agendamentos"),
+        where("dataKey", "==", dateKey),
+        where("status", "in", ["pendente", "confirmado"])
+      );
+      const snap = await getDocs(q);
+      return snap.docs.map((d) => d.data().horario);
+    } catch (err) {
+      console.error("Erro ao buscar horários ocupados:", err);
+      setError(err);
+      return []; // em caso de erro, não bloqueia nenhum horário
+    } finally {
+      setLoading(false);
+    }
   }, []);
 
-  return { fetchOccupied, loading };
+  return { fetchOccupied, loading, error };
 }
 
 // Cria o agendamento com status "pendente" — a confirmação definitiva
 // acontece quando o cliente fala com a Carol pelo WhatsApp.
 export function useCreateBooking() {
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState(null);
 
   const createBooking = useCallback(async ({ usuarioId, servico, dateKey, dateLabel, horario }) => {
     setSaving(true);
-    const ref = await addDoc(collection(db, "agendamentos"), {
-      usuarioId,
-      servicoId: servico.id,
-      servicoNome: servico.name,
-      profissional: servico.professional,
-      dataKey: dateKey,
-      dataLabel: dateLabel,
-      horario,
-      status: "pendente",
-      criadoEm: serverTimestamp(),
-    });
-    setSaving(false);
-    return ref.id;
+    setError(null);
+    try {
+      const ref = await addDoc(collection(db, "agendamentos"), {
+        usuarioId,
+        servicoId: servico.id,
+        servicoNome: servico.name,
+        profissional: servico.professional,
+        dataKey: dateKey,
+        dataLabel: dateLabel,
+        horario,
+        status: "pendente",
+        criadoEm: serverTimestamp(),
+      });
+      return ref.id;
+    } catch (err) {
+      console.error("Erro ao criar agendamento:", err);
+      setError(err);
+      throw err; // deixa quem chamou (App.jsx) saber que falhou
+    } finally {
+      setSaving(false);
+    }
   }, []);
 
-  return { createBooking, saving };
+  return { createBooking, saving, error };
 }
