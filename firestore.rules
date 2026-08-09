@@ -1,0 +1,25 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Cada cliente só pode ler/editar o próprio perfil
+    match /usuarios/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+    }
+
+    // Serviços são públicos para leitura (lista fixa, editada só pela equipe)
+    match /servicos/{servicoId} {
+      allow read: if true;
+      allow write: if false; // gerenciado manualmente pelo Firebase Console
+    }
+
+    // Agendamentos: cliente cria os seus e só lê/edita os próprios
+    match /agendamentos/{agendamentoId} {
+      allow create: if request.auth != null
+                    && request.resource.data.usuarioId == request.auth.uid;
+      allow read, update: if request.auth != null
+                    && resource.data.usuarioId == request.auth.uid;
+      allow delete: if false;
+    }
+  }
+}

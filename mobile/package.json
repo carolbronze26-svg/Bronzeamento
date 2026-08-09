@@ -1,0 +1,19 @@
+{
+  "name": "elaine-vaz-mobile",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "android": "react-native run-android",
+    "ios": "react-native run-ios",
+    "start": "react-native start"
+  },
+  "dependencies": {
+    "@react-native-firebase/app": "^20.0.0",
+    "@react-native-firebase/auth": "^20.0.0",
+    "@react-native-firebase/firestore": "^20.0.0",
+    "@react-native-google-signin/google-signin": "^13.0.0",
+    "lucide-react-native": "^0.383.0",
+    "react": "18.3.0",
+    "react-native": "0.74.0"
+  }
+}
