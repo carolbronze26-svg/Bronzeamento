@@ -1,5 +1,5 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock} from "lucide-react";
+import { Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { useCreateBooking, useOccupiedSlots } from "./hooks/useBooking";
 import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
@@ -110,9 +110,9 @@ export default function App() {
     <div className="page">
       <div className="frame">
         <Header step={step} steps={steps} />
-        <div className="stepCenter">
-      <img src="/logo-carol-sampaio.png" alt="Carol Sampaio" className="loginLogo" />
-          
+        <div className="body">
+          {step === 0 && <LoginStep onLogin={login} />}
+
           {step === 1 && (
             <ServiceStep
               selected={service}
