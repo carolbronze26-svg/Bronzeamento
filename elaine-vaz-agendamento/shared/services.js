@@ -24,7 +24,9 @@ export const SERVICES = [
   },
 ];
 
-// Horários — atendimento noturno (após 19h) todos os dias,
-// e aos domingos/feriados apenas com hora marcada.
-export const DAY_SLOTS = ["09:00", "10:30", "13:00", "14:30", "16:00", "17:30"];
-export const NIGHT_SLOTS = ["19:00", "19:30", "20:00", "20:30"];
+// Horários de atendimento:
+// - Segunda a sexta: somente após 19h
+// - Domingo: das 10h às 18h
+// - Sábado: sem atendimento
+export const WEEKDAY_SLOTS = ["19:00", "19:30", "20:00", "20:30"];
+export const SUNDAY_SLOTS = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30"];
