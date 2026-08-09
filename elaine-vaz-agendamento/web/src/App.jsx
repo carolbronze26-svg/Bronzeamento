@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock, Sparkles } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { useCreateBooking, useOccupiedSlots } from "./hooks/useBooking";
-import { SERVICES, DAY_SLOTS, NIGHT_SLOTS } from "../../shared/services";
+import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
 import { buildWhatsappConfirmationLink } from "../../shared/whatsapp";
 import "./styles.css";
 
@@ -45,15 +45,21 @@ export default function App() {
   const cells = useMemo(() => buildMonth(viewDate.getFullYear(), viewDate.getMonth()), [monthOffset]);
   const monthLabel = viewDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
 
-  const isSunday = (d) => d && new Date(viewDate.getFullYear(), viewDate.getMonth(), d).getDay() === 0;
+  // 0 = domingo, 6 = sábado
+  const weekdayOf = (d) => d && new Date(viewDate.getFullYear(), viewDate.getMonth(), d).getDay();
+  const isSunday = (d) => weekdayOf(d) === 0;
+  const isSaturday = (d) => weekdayOf(d) === 6;
   const isPast = (d) => {
     if (!d) return true;
     const cellDate = new Date(viewDate.getFullYear(), viewDate.getMonth(), d);
     const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     return cellDate < t;
   };
+  // sábado não tem atendimento
+  const isClosed = (d) => isSaturday(d);
+  const isDisabled = (d) => isPast(d) || isClosed(d);
 
-  const allSlots = isSunday(selectedDay) ? NIGHT_SLOTS : [...DAY_SLOTS, ...NIGHT_SLOTS];
+  const allSlots = isSunday(selectedDay) ? SUNDAY_SLOTS : WEEKDAY_SLOTS;
   const availableSlots = allSlots.filter((t) => !occupied.includes(t));
 
   async function handleSelectDay(d) {
@@ -119,7 +125,8 @@ export default function App() {
               selectedDay={selectedDay}
               setSelectedDay={handleSelectDay}
               isSunday={isSunday}
-              isPast={isPast}
+              isClosed={isClosed}
+              isDisabled={isDisabled}
               onPrevMonth={() => setMonthOffset((m) => m - 1)}
               onNextMonth={() => setMonthOffset((m) => m + 1)}
               slots={availableSlots}
@@ -252,12 +259,12 @@ function ServiceStep({ selected, onSelect, onNext, onBack }) {
 }
 
 function DateTimeStep({
-  cells, monthLabel, selectedDay, setSelectedDay, isSunday, isPast,
+  cells, monthLabel, selectedDay, setSelectedDay, isSunday, isClosed, isDisabled,
   onPrevMonth, onNextMonth, slots, selectedTime, setSelectedTime, onNext, onBack, saving,
 }) {
   return (
     <div>
-      <StepTitle title="Data e horário" subtitle="Atendimento noturno após 19h, e aos domingos com hora marcada" />
+      <StepTitle title="Data e horário" subtitle="Seg a sex após 19h · Domingo das 10h às 18h · Sábado fechado" />
       <div className="calendarCard">
         <div className="calendarNav">
           <button className="navBtn" onClick={onPrevMonth} aria-label="Mês anterior"><ChevronLeft size={16} /></button>
@@ -269,7 +276,8 @@ function DateTimeStep({
         </div>
         <div className="grid">
           {cells.map((d, i) => {
-            const disabled = isPast(d);
+            const disabled = isDisabled(d);
+            const closed = isClosed(d);
             const sunday = isSunday(d);
             const active = d === selectedDay;
             return (
@@ -284,6 +292,7 @@ function DateTimeStep({
                   color: active ? "#0B0A09" : disabled ? "#4A4436" : sunday ? "#E8CE85" : "#F3ECDD",
                   fontWeight: active ? 700 : sunday ? 600 : 500,
                   cursor: disabled ? "default" : "pointer",
+                  textDecoration: closed ? "line-through" : "none",
                 }}
               >
                 {d}
@@ -297,14 +306,17 @@ function DateTimeStep({
       {selectedDay && (
         <div className="slotsWrap">
           <div className="slotsHeading">
-            {isSunday(selectedDay) ? (<><Moon size={14} style={{ marginRight: 6, verticalAlign: -2 }} />Domingo — horários especiais</>) : (<><Sun size={14} style={{ marginRight: 6, verticalAlign: -2 }} />Horários disponíveis</>)}
+            {isSunday(selectedDay) ? (
+              <><Sun size={14} style={{ marginRight: 6, verticalAlign: -2 }} />Domingo — 10h às 18h</>
+            ) : (
+              <><Moon size={14} style={{ marginRight: 6, verticalAlign: -2 }} />Atendimento noturno, após 19h</>
+            )}
           </div>
           {slots.length === 0 ? (
             <p className="pMutedSmall">Sem horários livres neste dia. Escolha outra data.</p>
           ) : (
             <div className="slotsGrid">
               {slots.map((t) => {
-                const night = NIGHT_SLOTS.includes(t);
                 const active = t === selectedTime;
                 return (
                   <button
@@ -313,7 +325,6 @@ function DateTimeStep({
                     className="slotBtn"
                     style={{ borderColor: active ? "#E8CE85" : "#2A241A", background: active ? "#C9A24B" : "#151109", color: active ? "#0B0A09" : "#F3ECDD" }}
                   >
-                    {night && <Moon size={11} style={{ marginRight: 5, verticalAlign: -1, opacity: active ? 1 : 0.7 }} />}
                     {t}
                   </button>
                 );
