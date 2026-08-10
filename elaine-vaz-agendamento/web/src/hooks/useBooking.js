@@ -36,12 +36,15 @@ export function useCreateBooking() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const createBooking = useCallback(async ({ usuarioId, servico, dateKey, dateLabel, horario }) => {
+  const createBooking = useCallback(async ({ usuarioId, nome, email, telefone, servico, dateKey, dateLabel, horario }) => {
     setSaving(true);
     setError(null);
     try {
       const ref = await addDoc(collection(db, "agendamentos"), {
         usuarioId,
+        nome: nome || "",
+        email: email || "",
+        telefone: telefone || "",
         servicoId: servico.id,
         servicoNome: servico.name,
         profissional: servico.professional,

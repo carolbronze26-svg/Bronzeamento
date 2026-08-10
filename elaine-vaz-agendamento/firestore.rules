@@ -2,9 +2,15 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    // Cada cliente só pode ler/editar o próprio perfil
+    function isAdmin() {
+      return request.auth != null
+             && request.auth.token.email in ['carol.bronze26@gmail.com'];
+    }
+
+    // Cada cliente só pode ler/editar o próprio perfil; admin lê todos
     match /usuarios/{userId} {
-      allow read, write: if request.auth != null && request.auth.uid == userId;
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      allow write: if request.auth != null && request.auth.uid == userId;
     }
 
     // Serviços são públicos para leitura (lista fixa, editada só pela equipe)
@@ -13,12 +19,13 @@ service cloud.firestore {
       allow write: if false; // gerenciado manualmente pelo Firebase Console
     }
 
-    // Agendamentos: cliente cria os seus e só lê/edita os próprios
+    // Agendamentos: cliente cria/lê os seus; admin lê e atualiza todos (status)
     match /agendamentos/{agendamentoId} {
       allow create: if request.auth != null
                     && request.resource.data.usuarioId == request.auth.uid;
-      allow read, update: if request.auth != null
-                    && resource.data.usuarioId == request.auth.uid;
+      allow read: if request.auth != null
+                    && (resource.data.usuarioId == request.auth.uid || isAdmin());
+      allow update: if isAdmin();
       allow delete: if false;
     }
   }

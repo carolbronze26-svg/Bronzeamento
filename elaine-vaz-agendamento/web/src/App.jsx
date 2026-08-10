@@ -95,6 +95,7 @@ export default function App() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [occupied, setOccupied] = useState([]);
   const [selectedTime, setSelectedTime] = useState(null);
+  const [phone, setPhone] = useState("");
   const [whatsappLink, setWhatsappLink] = useState(null);
 
   // avança automaticamente pro passo 1 assim que o login completa
@@ -145,6 +146,9 @@ export default function App() {
     try {
       await createBooking({
         usuarioId: user.uid,
+        nome: user.displayName,
+        email: user.email,
+        telefone: phone,
         servico: service,
         dateKey,
         dateLabel,
@@ -208,6 +212,8 @@ export default function App() {
               slots={availableSlots}
               selectedTime={selectedTime}
               setSelectedTime={setSelectedTime}
+              phone={phone}
+              setPhone={setPhone}
               onNext={handleConfirm}
               onBack={() => setStep(1)}
               saving={saving}
@@ -354,7 +360,7 @@ function ServiceStep({ selected, onSelect, onNext, onBack }) {
 
 function DateTimeStep({
   cells, monthLabel, selectedDay, setSelectedDay, isSunday, isClosed, isDisabled,
-  onPrevMonth, onNextMonth, slots, selectedTime, setSelectedTime, onNext, onBack, saving,
+  onPrevMonth, onNextMonth, slots, selectedTime, setSelectedTime, phone, setPhone, onNext, onBack, saving,
 }) {
   return (
     <div>
@@ -428,7 +434,21 @@ function DateTimeStep({
         </div>
       )}
 
-      <FooterNav onBack={onBack} onNext={onNext} nextDisabled={!selectedDay || !selectedTime || saving} nextLabel={saving ? "Agendando..." : "Continuar"} />
+      {selectedTime && (
+        <div className="phoneWrap">
+          <label className="phoneLabel">Seu telefone (WhatsApp)</label>
+          <input
+            type="tel"
+            inputMode="tel"
+            placeholder="(11) 99999-9999"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="phoneInput"
+          />
+        </div>
+      )}
+
+      <FooterNav onBack={onBack} onNext={onNext} nextDisabled={!selectedDay || !selectedTime || phone.trim().length < 8 || saving} nextLabel={saving ? "Agendando..." : "Continuar"} />
     </div>
   );
 }
