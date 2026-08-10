@@ -13,6 +13,18 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   padding: 28px 14px;
   font-family: 'Manrope', sans-serif;
 }
+.introPage {
+  min-height: 100vh; width: 100%; background: #0B0A09;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; cursor: pointer;
+}
+.introVideo { width: 100%; max-width: 480px; height: auto; display: block; }
+.introSkip {
+  position: absolute; bottom: 28px; right: 20px; background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.2); color: #F3ECDD; border-radius: 20px;
+  padding: 8px 16px; font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: 'Manrope', sans-serif; backdrop-filter: blur(4px);
+}
 .frame {
   width: 100%;
   max-width: 420px;
