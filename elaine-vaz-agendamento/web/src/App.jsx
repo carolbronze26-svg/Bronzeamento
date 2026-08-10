@@ -56,12 +56,38 @@ function useInstallPrompt() {
   return { canInstall: !!deferredPrompt && !installed, promptInstall };
 }
 
+function IntroScreen({ onFinish }) {
+  useEffect(() => {
+    // segurança: mesmo se o vídeo falhar ou não disparar "onEnded",
+    // avança sozinho depois de um tempo
+    const fallback = setTimeout(onFinish, 6000);
+    return () => clearTimeout(fallback);
+  }, [onFinish]);
+
+  return (
+    <div className="introPage" onClick={onFinish}>
+      <video
+        className="introVideo"
+        src="/intro.mp4"
+        autoPlay
+        muted
+        playsInline
+        onEnded={onFinish}
+      />
+      <button className="introSkip" onClick={onFinish}>
+        Pular
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const { user, loading, login } = useAuth();
   const { createBooking, saving } = useCreateBooking();
   const { fetchOccupied } = useOccupiedSlots();
   const { canInstall, promptInstall } = useInstallPrompt();
   const [dismissedInstall, setDismissedInstall] = useState(false);
+  const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("introSeen"));
 
   const [step, setStep] = useState(0);
   const [service, setService] = useState(null);
@@ -139,6 +165,13 @@ export default function App() {
   }
 
   const steps = ["Entrar", "Serviço", "Horário", "Confirmar"];
+
+  function finishIntro() {
+    sessionStorage.setItem("introSeen", "1");
+    setShowIntro(false);
+  }
+
+  if (showIntro) return <IntroScreen onFinish={finishIntro} />;
 
   if (loading) return <div className="page" />;
 
