@@ -24,7 +24,7 @@ export const SERVICES = [
   },
 ];
 
-/// Horários de atendimento:
+// Horários de atendimento:
 // - Segunda a sexta: somente após 19h
 // - Domingo: das 10h às 18h
 // - Sábado: sem atendimento
