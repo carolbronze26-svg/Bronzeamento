@@ -1,5 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import {
+  signInWithPopup,
   signInWithRedirect,
   getRedirectResult,
   signOut,
@@ -7,6 +8,14 @@ import {
 } from "firebase/auth";
 import { doc, setDoc, serverTimestamp } from "firebase/firestore";
 import { auth, db, googleProvider } from "../firebase";
+
+// Detecta celular real (não desktop). Em celulares o popup de OAuth costuma
+// ser bloqueado/fechado sozinho; em desktop o popup funciona bem e evita um
+// problema diferente do redirect (o Chrome às vezes limpa o estado de login
+// no meio do caminho ao navegar entre domínios — Google → Firebase → site).
+function isMobileDevice() {
+  return /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
 
 // Salva/atualiza o usuário no Firestore assim que ele loga
 async function syncUserToFirestore(firebaseUser) {
@@ -21,14 +30,11 @@ async function syncUserToFirestore(firebaseUser) {
 export function useAuth() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState(null);
 
   useEffect(() => {
-    // Popups de OAuth são bloqueados/fechados com frequência em navegadores
-    // mobile (Chrome Android, Safari iOS), por causa de restrições de cookies
-    // de terceiros. Por isso usamos signInWithRedirect: o usuário sai do app,
-    // loga na tela do Google e volta — mais lento, mas muito mais confiável.
-    //
-    // getRedirectResult() captura o resultado assim que o usuário volta.
+    // Só relevante para o fluxo de redirect (mobile) — se o usuário veio
+    // de volta do Google, captura o resultado aqui.
     getRedirectResult(auth)
       .then((result) => {
         if (result?.user) {
@@ -37,6 +43,7 @@ export function useAuth() {
       })
       .catch((err) => {
         console.error("Erro ao concluir login com Google:", err);
+        setAuthError(err);
       });
 
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -46,13 +53,27 @@ export function useAuth() {
     return unsubscribe;
   }, []);
 
-  const login = useCallback(() => {
-    // Não precisa de await/retorno aqui — a página é redirecionada para o
-    // Google e volta para cá; o resultado é tratado no getRedirectResult acima.
-    return signInWithRedirect(auth, googleProvider);
+  const login = useCallback(async () => {
+    setAuthError(null);
+    try {
+      if (isMobileDevice()) {
+        // mobile: usa redirect (mais confiável que popup nesses navegadores)
+        await signInWithRedirect(auth, googleProvider);
+      } else {
+        // desktop: usa popup (mais rápido e evita o problema de estado
+        // perdido entre domínios que o redirect pode ter)
+        const result = await signInWithPopup(auth, googleProvider);
+        if (result?.user) {
+          await syncUserToFirestore(result.user);
+        }
+      }
+    } catch (err) {
+      console.error("Erro ao entrar com Google:", err);
+      setAuthError(err);
+    }
   }, []);
 
   const logout = useCallback(() => signOut(auth), []);
 
-  return { user, loading, login, logout };
+  return { user, loading, login, logout, authError };
 }
