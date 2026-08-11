@@ -82,7 +82,7 @@ function IntroScreen({ onFinish }) {
 }
 
 export default function App() {
-  const { user, loading, login } = useAuth();
+  const { user, loading, login, authError } = useAuth();
   const { createBooking, saving } = useCreateBooking();
   const { fetchOccupied } = useOccupiedSlots();
   const { canInstall, promptInstall } = useInstallPrompt();
@@ -187,7 +187,7 @@ export default function App() {
         )}
         <Header step={step} steps={steps} />
         <div className="body">
-          {step === 0 && <LoginStep onLogin={login} />}
+          {step === 0 && <LoginStep onLogin={login} authError={authError} />}
 
           {step === 1 && (
             <ServiceStep
@@ -303,7 +303,7 @@ function Header({ step, steps }) {
   );
 }
 
-function LoginStep({ onLogin }) {
+function LoginStep({ onLogin, authError }) {
   return (
     <div className="stepCenter">
       <img src="/logo-carol-sampaio.png" alt="Carol Sampaio - Beleza que você vê, saúde que você sente" className="loginLogo" />
@@ -312,6 +312,11 @@ function LoginStep({ onLogin }) {
         <Chrome size={18} />
         Continuar com Google
       </button>
+      {authError && (
+        <p className="loginError">
+          Não foi possível entrar com o Google. Verifique sua conexão e tente novamente.
+        </p>
+      )}
       <p className="fineprint">
         Ao continuar, você concorda com o uso dos seus dados apenas para confirmar e lembrar seus agendamentos.
       </p>

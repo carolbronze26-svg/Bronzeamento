@@ -72,6 +72,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 .pMuted { color: #9C9384; font-size: 13.5px; line-height: 1.5; margin: 0 0 26px; max-width: 300px; }
 .pMutedSmall { color: #8A8272; font-size: 12.5px; margin: 0; }
 .fineprint { color: #5F594C; font-size: 10.5px; margin-top: 18px; max-width: 260px; line-height: 1.5; }
+.loginError { color: #E07856; font-size: 12px; margin-top: 14px; max-width: 280px; }
 .googleBtn {
   display: flex; align-items: center; gap: 10px; background: #F3ECDD; color: #0B0A09;
   border: none; border-radius: 12px; padding: 13px 22px; font-size: 14px; font-weight: 700;
