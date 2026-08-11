@@ -28,5 +28,17 @@ service cloud.firestore {
       allow update: if isAdmin();
       allow delete: if false;
     }
+
+    // Avaliações: qualquer pessoa com o link pode criar UMA (sem login,
+    // pra não exigir que o cliente faça login de novo só pra avaliar).
+    // Só é possível criar, nunca sobrescrever ou apagar — e só o admin lê.
+    match /avaliacoes/{agendamentoId} {
+      allow read: if isAdmin();
+      allow create: if request.resource.data.nota is int
+                    && request.resource.data.nota >= 1
+                    && request.resource.data.nota <= 5
+                    && !exists(/databases/$(database)/documents/avaliacoes/$(agendamentoId));
+      allow update, delete: if false;
+    }
   }
 }

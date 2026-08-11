@@ -2,6 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import AdminDashboard from "./AdminDashboard.jsx";
+import AvaliarPage from "./AvaliarPage.jsx";
 
 // Registra o service worker — necessário para o navegador oferecer
 // a opção de "Instalar app" (PWA).
@@ -14,11 +15,18 @@ if ("serviceWorker" in navigator) {
 }
 
 // Roteamento simples: /admin mostra o painel administrativo,
-// qualquer outro caminho mostra o app de agendamento normal.
-const isAdminRoute = window.location.pathname.startsWith("/admin");
+// /avaliar mostra a página pública de avaliação, qualquer outro
+// caminho mostra o app de agendamento normal.
+const path = window.location.pathname;
+
+function Root() {
+  if (path.startsWith("/admin")) return <AdminDashboard />;
+  if (path.startsWith("/avaliar")) return <AvaliarPage />;
+  return <App />;
+}
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    {isAdminRoute ? <AdminDashboard /> : <App />}
+    <Root />
   </React.StrictMode>
 );
