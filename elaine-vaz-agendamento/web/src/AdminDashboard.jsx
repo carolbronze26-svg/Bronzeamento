@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { db } from "./firebase";
+import { ReviewCard } from "./ReviewsPage.jsx";
 import "./styles.css";
 
 // E-mails autorizados a ver o painel administrativo.
@@ -72,6 +73,15 @@ export default function AdminDashboard() {
       await deleteDoc(doc(db, "bloqueios", dataKey));
     } catch (err) {
       alert("Não foi possível remover o bloqueio. Tente novamente.");
+    }
+  }
+
+  async function excluirAgendamento(item) {
+    if (!window.confirm(`Excluir o agendamento de ${item.nome || "cliente sem nome"} permanentemente?`)) return;
+    try {
+      await deleteDoc(doc(db, "agendamentos", item.id));
+    } catch (err) {
+      alert("Não foi possível excluir. Tente novamente.");
     }
   }
 
@@ -268,16 +278,27 @@ export default function AdminDashboard() {
 
         <AdminSection
           title="Pendentes" icon={<Clock size={14} />} items={pendentes}
-          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus}
+          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
         />
         <AdminSection
           title="Concluídos" icon={<CheckCircle2 size={14} />} items={confirmados}
-          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus}
+          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
         />
         <AdminSection
           title="Cancelados" icon={<XCircle size={14} />} items={cancelados}
-          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus}
+          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
         />
+
+        <div className="adminSection">
+          <div className="adminSectionTitle"><Star size={14} />Avaliações ({Object.keys(avaliacoes).length})</div>
+          {Object.keys(avaliacoes).length === 0 ? (
+            <p className="pMutedSmall">Ainda não há avaliações.</p>
+          ) : (
+            Object.entries(avaliacoes)
+              .sort((a, b) => (b[1].criadoEm?.seconds || 0) - (a[1].criadoEm?.seconds || 0))
+              .map(([id, av]) => <ReviewCard key={id} item={av} />)
+          )}
+        </div>
       </div>
     </div>
   );
@@ -287,7 +308,7 @@ function clientKey(item) {
   return (item.email || item.telefone || "").toLowerCase();
 }
 
-function AdminSection({ title, icon, items, contagemPorCliente, avaliacoes, onSetStatus }) {
+function AdminSection({ title, icon, items, contagemPorCliente, avaliacoes, onSetStatus, onDelete }) {
   return (
     <div className="adminSection">
       <div className="adminSectionTitle">{icon}{title} ({items.length})</div>
@@ -295,7 +316,7 @@ function AdminSection({ title, icon, items, contagemPorCliente, avaliacoes, onSe
       {items.map((item) => {
         const visitas = contagemPorCliente[clientKey(item)] || 1;
         const avaliacao = avaliacoes[item.id];
-        const linkAvaliacao = `${window.location.origin}/avaliar?id=${item.id}`;
+        const linkAvaliacao = `${window.location.origin}/avaliar?id=${item.id}&nome=${encodeURIComponent(item.nome || "")}&servico=${encodeURIComponent(item.servicoNome || "")}`;
         const whatsappAvaliacao = item.telefone
           ? `https://wa.me/${item.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(
               `Oi ${item.nome || ""}! Poderia avaliar seu atendimento? ${linkAvaliacao}`
@@ -339,6 +360,11 @@ function AdminSection({ title, icon, items, contagemPorCliente, avaliacoes, onSe
                 <a className="adminReviewBtn" href={whatsappAvaliacao} target="_blank" rel="noreferrer">
                   <MessageCircle size={12} /> Pedir avaliação
                 </a>
+              )}
+              {item.status === "cancelado" && (
+                <button className="adminDeleteBtn" onClick={() => onDelete(item)}>
+                  <Trash2 size={12} /> Excluir
+                </button>
               )}
             </div>
           </div>

@@ -26,14 +26,15 @@ service cloud.firestore {
       allow read: if request.auth != null
                     && (resource.data.usuarioId == request.auth.uid || isAdmin());
       allow update: if isAdmin();
-      allow delete: if false;
+      allow delete: if isAdmin() && resource.data.status == 'cancelado';
     }
 
     // Avaliações: qualquer pessoa com o link pode criar UMA (sem login,
     // pra não exigir que o cliente faça login de novo só pra avaliar).
-    // Só é possível criar, nunca sobrescrever ou apagar — e só o admin lê.
+    // Leitura pública — os depoimentos aparecem também no app para clientes.
+    // Só é possível criar, nunca sobrescrever ou apagar.
     match /avaliacoes/{agendamentoId} {
-      allow read: if isAdmin();
+      allow read: if true;
       allow create: if request.resource.data.nota is int
                     && request.resource.data.nota >= 1
                     && request.resource.data.nota <= 5

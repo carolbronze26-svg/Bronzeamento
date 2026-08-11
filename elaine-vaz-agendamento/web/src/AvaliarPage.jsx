@@ -7,6 +7,8 @@ import "./styles.css";
 export default function AvaliarPage() {
   const params = new URLSearchParams(window.location.search);
   const agendamentoId = params.get("id");
+  const nomeCliente = params.get("nome") || "";
+  const servico = params.get("servico") || "";
 
   const [nota, setNota] = useState(0);
   const [hoverNota, setHoverNota] = useState(0);
@@ -38,6 +40,8 @@ export default function AvaliarPage() {
       }
       await setDoc(ref, {
         agendamentoId,
+        nome: nomeCliente,
+        servico,
         nota,
         comentario: comentario.trim(),
         criadoEm: serverTimestamp(),
@@ -69,7 +73,9 @@ export default function AvaliarPage() {
         <div className="body stepCenter">
           <img src="/logo-carol-sampaio.png" alt="Carol Sampaio" className="loginLogo" />
           <h1 className="h1">Como foi seu atendimento?</h1>
-          <p className="pMuted">Sua opinião ajuda a Carol a melhorar cada vez mais.</p>
+          <p className="pMuted">
+            {servico ? `${servico} — sua opinião ajuda a Carol a melhorar cada vez mais.` : "Sua opinião ajuda a Carol a melhorar cada vez mais."}
+          </p>
 
           <div className="starRow">
             {[1, 2, 3, 4, 5].map((n) => (

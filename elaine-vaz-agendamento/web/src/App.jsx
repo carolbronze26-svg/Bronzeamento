@@ -323,6 +323,7 @@ function LoginStep({ onLogin, authError }) {
       <p className="fineprint">
         Ao continuar, você concorda com o uso dos seus dados apenas para confirmar e lembrar seus agendamentos.
       </p>
+      <a href="/avaliacoes" className="reviewsLink">Ver avaliações de clientes</a>
     </div>
   );
 }
