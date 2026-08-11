@@ -40,5 +40,12 @@ service cloud.firestore {
                     && !exists(/databases/$(database)/documents/avaliacoes/$(agendamentoId));
       allow update, delete: if false;
     }
+
+    // Datas bloqueadas: o app de agendamento precisa ler (pra travar o
+    // calendário), mas só o admin pode adicionar/remover.
+    match /bloqueios/{dataKey} {
+      allow read: if true;
+      allow write: if isAdmin();
+    }
   }
 }

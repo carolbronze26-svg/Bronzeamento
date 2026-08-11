@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { collection, query, orderBy, onSnapshot, doc, updateDoc } from "firebase/firestore";
+import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import {
   Chrome, Clock, CheckCircle2, XCircle, Phone, Mail, Calendar,
-  Search, Star, TrendingUp, Users, MessageCircle,
+  Search, Star, TrendingUp, Users, MessageCircle, CalendarOff, Trash2,
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { db } from "./firebase";
@@ -17,6 +17,9 @@ export default function AdminDashboard() {
   const [avaliacoes, setAvaliacoes] = useState({});
   const [busca, setBusca] = useState("");
   const [dataFiltro, setDataFiltro] = useState("");
+  const [bloqueios, setBloqueios] = useState([]);
+  const [novaDataBloqueio, setNovaDataBloqueio] = useState("");
+  const [motivoBloqueio, setMotivoBloqueio] = useState("");
   const isAdmin = !!user && ADMIN_EMAILS.includes((user.email || "").toLowerCase());
 
   useEffect(() => {
@@ -37,6 +40,40 @@ export default function AdminDashboard() {
     });
     return unsubscribe;
   }, [isAdmin]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    const unsubscribe = onSnapshot(collection(db, "bloqueios"), (snap) => {
+      setBloqueios(
+        snap.docs
+          .map((d) => ({ data: d.id, ...d.data() }))
+          .sort((a, b) => a.data.localeCompare(b.data))
+      );
+    });
+    return unsubscribe;
+  }, [isAdmin]);
+
+  async function adicionarBloqueio() {
+    if (!novaDataBloqueio) return;
+    try {
+      await setDoc(doc(db, "bloqueios", novaDataBloqueio), {
+        motivo: motivoBloqueio.trim(),
+        criadoEm: serverTimestamp(),
+      });
+      setNovaDataBloqueio("");
+      setMotivoBloqueio("");
+    } catch (err) {
+      alert("Não foi possível bloquear essa data. Tente novamente.");
+    }
+  }
+
+  async function removerBloqueio(dataKey) {
+    try {
+      await deleteDoc(doc(db, "bloqueios", dataKey));
+    } catch (err) {
+      alert("Não foi possível remover o bloqueio. Tente novamente.");
+    }
+  }
 
   async function setStatus(item, novoStatus) {
     try {
@@ -188,6 +225,45 @@ export default function AdminDashboard() {
               </button>
             )}
           </div>
+        </div>
+
+        <div className="adminSection">
+          <div className="adminSectionTitle"><CalendarOff size={14} />Datas bloqueadas</div>
+          <div className="blockForm">
+            <input
+              type="date"
+              value={novaDataBloqueio}
+              onChange={(e) => setNovaDataBloqueio(e.target.value)}
+              className="adminDateInput"
+            />
+            <input
+              type="text"
+              placeholder="Motivo (opcional)"
+              value={motivoBloqueio}
+              onChange={(e) => setMotivoBloqueio(e.target.value)}
+              className="adminSearchInput blockReasonInput"
+            />
+            <button className="adminToggleBtn" onClick={adicionarBloqueio} disabled={!novaDataBloqueio}>
+              Bloquear
+            </button>
+          </div>
+          {bloqueios.length === 0 ? (
+            <p className="pMutedSmall">Nenhuma data bloqueada.</p>
+          ) : (
+            <div className="blockList">
+              {bloqueios.map((b) => (
+                <div key={b.data} className="blockItem">
+                  <span className="blockItemDate">
+                    {new Date(b.data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                  </span>
+                  {b.motivo && <span className="blockItemReason">{b.motivo}</span>}
+                  <button className="blockRemoveBtn" onClick={() => removerBloqueio(b.data)} aria-label="Remover bloqueio">
+                    <Trash2 size={13} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <AdminSection

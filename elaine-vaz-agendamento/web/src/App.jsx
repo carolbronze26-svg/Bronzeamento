@@ -2,6 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import { Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock, Download, X } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { useCreateBooking, useOccupiedSlots } from "./hooks/useBooking";
+import { useBlockedDates } from "./hooks/useBlockedDates";
 import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
 import { buildWhatsappConfirmationLink } from "../../shared/whatsapp";
 import "./styles.css";
@@ -85,6 +86,7 @@ export default function App() {
   const { user, loading, login, authError } = useAuth();
   const { createBooking, saving } = useCreateBooking();
   const { fetchOccupied } = useOccupiedSlots();
+  const blockedDates = useBlockedDates();
   const { canInstall, promptInstall } = useInstallPrompt();
   const [dismissedInstall, setDismissedInstall] = useState(false);
   const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("introSeen"));
@@ -118,8 +120,9 @@ export default function App() {
     const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     return cellDate < t;
   };
-  // sábado não tem atendimento
-  const isClosed = (d) => isSaturday(d);
+  // sábado não tem atendimento, e datas bloqueadas manualmente pela Carol
+  const isBlocked = (d) => d && blockedDates.has(toDateKey(viewDate.getFullYear(), viewDate.getMonth(), d));
+  const isClosed = (d) => isSaturday(d) || isBlocked(d);
   const isDisabled = (d) => isPast(d) || isClosed(d);
 
   const allSlots = isSunday(selectedDay) ? SUNDAY_SLOTS : WEEKDAY_SLOTS;
