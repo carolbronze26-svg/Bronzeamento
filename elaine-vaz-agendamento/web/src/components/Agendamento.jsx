@@ -1,5 +1,5 @@
-import React, { useMemo, useState, useEffect } from "react";
-import { Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock } from "lucide-react";
+import React, { useMemo, useState } from "react";
+import { Check, ChevronLeft, ChevronRight, MessageCircle, Clock } from "lucide-react";
 
 const DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -15,9 +15,11 @@ function buildMonth(year, month) {
   const first = new Date(year, month, 1);
   const startWeekday = first.getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
+
   const cells = [];
   for (let i = 0; i < startWeekday; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+
   return cells;
 }
 
@@ -35,8 +37,16 @@ export default function Agendamento() {
 
   const today = new Date();
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
-  const cells = useMemo(() => buildMonth(viewDate.getFullYear(), viewDate.getMonth()), [monthOffset]);
-  const monthLabel = viewDate.toLocaleDateString("pt-BR", { month: "long", year: "numeric" });
+
+  const cells = useMemo(
+    () => buildMonth(viewDate.getFullYear(), viewDate.getMonth()),
+    [viewDate]
+  );
+
+  const monthLabel = viewDate.toLocaleDateString("pt-BR", {
+    month: "long",
+    year: "numeric",
+  });
 
   const weekdayOf = (d) => d && new Date(viewDate.getFullYear(), viewDate.getMonth(), d).getDay();
   const isSunday = (d) => weekdayOf(d) === 0;
@@ -54,9 +64,13 @@ export default function Agendamento() {
 
   const allSlots = isSunday(selectedDay) ? SUNDAY_SLOTS : WEEKDAY_SLOTS;
 
-  useEffect(() => {
-    if (step === 0) return;
-  }, [step]);
+  const selectedDateLabel = selectedDay
+    ? new Date(viewDate.getFullYear(), viewDate.getMonth(), selectedDay).toLocaleDateString("pt-BR")
+    : "";
+
+  const summaryDateKey = selectedDay
+    ? toDateKey(viewDate.getFullYear(), viewDate.getMonth(), selectedDay)
+    : "";
 
   return (
     <div>
@@ -64,15 +78,25 @@ export default function Agendamento() {
         <section>
           <h2>Agendamento</h2>
           <p>Escolha um serviço para começar.</p>
+
           <div className="serviceList">
             {SERVICES.map((s) => (
               <button
                 key={s.id}
+                type="button"
                 className={`serviceCard ${service?.id === s.id ? "serviceCardActive" : ""}`}
                 onClick={() => setService(s)}
               >
-                <div>
-                  <div className="serviceName">{s.name}</div>
+                <div className="radioOuter">
+                  {service?.id === s.id && <div className="radioInner" />}
+                </div>
+
+                <div style={{ flex: 1 }}>
+                  <div className="serviceName">
+                    {s.name}
+                    <span className="serviceTag">Popular</span>
+                  </div>
+
                   <div className="serviceMeta">
                     <Clock size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
                     {s.duration} · com {s.professional}
@@ -86,7 +110,7 @@ export default function Agendamento() {
             className="primaryBtn"
             disabled={!service}
             onClick={() => setStep(1)}
-            style={{ marginTop: 16 }}
+            style={{ marginTop: 16, width: "100%" }}
           >
             Continuar
           </button>
@@ -96,64 +120,100 @@ export default function Agendamento() {
       {step === 1 && (
         <section>
           <h2>Escolha a data</h2>
-          <div className="calendarNav">
-            <button onClick={() => setMonthOffset((m) => m - 1)} className="navBtn">
-              <ChevronLeft size={16} />
-            </button>
-            <span className="monthLabel">{monthLabel}</span>
-            <button onClick={() => setMonthOffset((m) => m + 1)} className="navBtn">
-              <ChevronRight size={16} />
-            </button>
-          </div>
+          <p>Selecione o dia e depois escolha o horário disponível.</p>
 
-          <div className="weekRow">
-            {DAYS.map((d, i) => (
-              <span key={i} className="weekDay">
-                {d}
-              </span>
-            ))}
-          </div>
+          <div className="calendarCard">
+            <div className="calendarNav">
+              <button type="button" onClick={() => setMonthOffset((m) => m - 1)} className="navBtn">
+                <ChevronLeft size={16} />
+              </button>
 
-          <div className="grid">
-            {cells.map((d, i) => {
-              const disabled = isDisabled(d);
-              const sunday = isSunday(d);
-              const active = d === selectedDay;
+              <span className="monthLabel">{monthLabel}</span>
 
-              return (
-                <button
-                  key={i}
-                  disabled={!d || disabled}
-                  onClick={() => setSelectedDay(d)}
-                  className="dayCell"
-                >
+              <button type="button" onClick={() => setMonthOffset((m) => m + 1)} className="navBtn">
+                <ChevronRight size={16} />
+              </button>
+            </div>
+
+            <div className="weekRow">
+              {DAYS.map((d, i) => (
+                <span key={i} className="weekDay">
                   {d}
-                  {sunday && <span className="sundayDot" />}
-                  {active && <span className="activeDot"><Check size={10} /></span>}
-                </button>
-              );
-            })}
+                </span>
+              ))}
+            </div>
+
+            <div className="grid">
+              {cells.map((d, i) => {
+                const disabled = isDisabled(d);
+                const sunday = isSunday(d);
+                const active = d === selectedDay;
+
+                return (
+                  <button
+                    key={i}
+                    type="button"
+                    disabled={!d || disabled}
+                    onClick={() => {
+                      setSelectedDay(d);
+                      setSelectedTime(null);
+                      setPhone("");
+                    }}
+                    className="dayCell"
+                    style={{
+                      background: active
+                        ? "linear-gradient(135deg, #E8CE85, #C9A24B)"
+                        : disabled
+                        ? "transparent"
+                        : "#151109",
+                      color: active ? "#0B0A09" : disabled ? "#5F594C" : "#F3ECDD",
+                      cursor: !d || disabled ? "not-allowed" : "pointer",
+                      opacity: !d ? 0 : 1,
+                    }}
+                  >
+                    {d}
+                    {sunday && !active && <span className="sundayDot" />}
+                    {active && (
+                      <span className="activeDot">
+                        <Check size={10} />
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
           </div>
 
           {selectedDay && (
-            <div style={{ marginTop: 18 }}>
-              <h3>Escolha o horário</h3>
+            <div className="slotsWrap">
+              <h3 className="slotsHeading">Escolha o horário</h3>
+
               <div className="slotsGrid">
-                {allSlots.map((t) => (
-                  <button
-                    key={t}
-                    className={`slotBtn ${selectedTime === t ? "slotBtnActive" : ""}`}
-                    onClick={() => setSelectedTime(t)}
-                  >
-                    {t}
-                  </button>
-                ))}
+                {allSlots.map((t) => {
+                  const active = selectedTime === t;
+
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      className="slotBtn"
+                      onClick={() => setSelectedTime(t)}
+                      style={{
+                        background: active ? "linear-gradient(135deg, #E8CE85, #C9A24B)" : "#151109",
+                        color: active ? "#0B0A09" : "#F3ECDD",
+                        borderColor: active ? "transparent" : "#2A241A",
+                      }}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
 
           {selectedTime && (
-            <div style={{ marginTop: 18 }}>
+            <div className="phoneWrap">
               <label className="phoneLabel">Seu telefone (WhatsApp)</label>
               <input
                 type="tel"
@@ -165,11 +225,22 @@ export default function Agendamento() {
             </div>
           )}
 
-          <div className="footerNav" style={{ marginTop: 24 }}>
-            <button className="ghostBtn" onClick={() => setStep(0)}>
+          <div className="footerNav">
+            <button
+              type="button"
+              className="ghostBtn"
+              onClick={() => {
+                setStep(0);
+                setSelectedDay(null);
+                setSelectedTime(null);
+                setPhone("");
+              }}
+            >
               Voltar
             </button>
+
             <button
+              type="button"
               className="primaryBtn"
               disabled={!selectedDay || !selectedTime || phone.trim().length < 8}
               onClick={() => setStep(2)}
@@ -182,18 +253,62 @@ export default function Agendamento() {
 
       {step === 2 && (
         <section>
-          <h2>Confirmar</h2>
-          <p>Resumo do agendamento pronto para integrar com WhatsApp.</p>
-          <div className="summaryCard">
-            <p><strong>Serviço:</strong> {service?.name}</p>
-            <p><strong>Data:</strong> {selectedDay}</p>
-            <p><strong>Horário:</strong> {selectedTime}</p>
-            <p><strong>Telefone:</strong> {phone}</p>
+          <div className="stepCenter">
+            <div className="checkCircle">
+              <Check size={22} color="#0B0A09" />
+            </div>
+
+            <h2>Confirmar</h2>
+            <p>Resumo do agendamento pronto para integrar com WhatsApp.</p>
           </div>
-          <a className="whatsBtn" href="#" target="_blank" rel="noreferrer">
+
+          <div className="summaryCard">
+            <div className="summaryRow">
+              <span className="summaryLabel">Serviço</span>
+              <span className="summaryValue">{service?.name}</span>
+            </div>
+
+            <div className="summaryDivider" />
+
+            <div className="summaryRow">
+              <span className="summaryLabel">Data</span>
+              <span className="summaryValue">{selectedDateLabel}</span>
+            </div>
+
+            <div className="summaryDivider" />
+
+            <div className="summaryRow">
+              <span className="summaryLabel">Horário</span>
+              <span className="summaryValue">{selectedTime}</span>
+            </div>
+
+            <div className="summaryDivider" />
+
+            <div className="summaryRow">
+              <span className="summaryLabel">Telefone</span>
+              <span className="summaryValue">{phone}</span>
+            </div>
+          </div>
+
+          <a
+            className="whatsBtn"
+            href={`https://wa.me/55${phone.replace(/\D/g, "")}?text=${encodeURIComponent(
+              `Olá! Quero confirmar meu agendamento.\n\nServiço: ${service?.name}\nData: ${selectedDateLabel}\nHorário: ${selectedTime}\nCódigo: ${summaryDateKey}`
+            )}`}
+            target="_blank"
+            rel="noreferrer"
+          >
             <MessageCircle size={18} />
             Confirmar no WhatsApp
           </a>
+
+          <button
+            type="button"
+            className="backLink"
+            onClick={() => setStep(1)}
+          >
+            Voltar para edição
+          </button>
         </section>
       )}
     </div>

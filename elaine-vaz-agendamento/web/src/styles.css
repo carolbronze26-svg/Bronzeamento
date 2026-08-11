@@ -258,3 +258,162 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 }
 .reviewTextarea::placeholder { color: #5F594C; }
 .reviewTextarea:focus { outline: none; border-color: #C9A24B; }
+///----------------------------------///
+
+
+.tabsPage {
+  width: 100%;
+  max-width: 420px;
+  background: #0F0C09;
+  border: 1px solid #221D14;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+  font-family: 'Manrope', sans-serif;
+}
+
+.tabsBar {
+  display: flex;
+  gap: 8px;
+  padding: 14px;
+  border-bottom: 1px solid #1D1810;
+  background: #0F0C09;
+  overflow-x: auto;
+}
+
+.tabBtn {
+  border: 1px solid #2A241A;
+  background: #151109;
+  color: #9C9384;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabBtnActive {
+  background: linear-gradient(135deg, #E8CE85, #C9A24B);
+  color: #0B0A09;
+  border-color: transparent;
+}
+
+.tabsContent {
+  padding: 22px;
+}
+
+.tabPanel h2 {
+  margin: 0 0 8px;
+  color: #F3ECDD;
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 28px;
+}
+
+.tabPanel p {
+  color: #9C9384;
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.socialButtons {
+  display: flex;
+  gap: 10px;
+  margin-top: 18px;
+  flex-wrap: wrap;
+}
+
+.secondaryBtn {
+  flex: 1;
+  background: transparent;
+  border: 1.5px solid #2A241A;
+  color: #F3ECDD;
+  border-radius: 12px;
+  padding: 12px 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+}
+
+.mapBox {
+  margin-top: 16px;
+  height: 180px;
+  border-radius: 16px;
+  border: 1px solid #2A241A;
+  background: #131009;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #8A8272;
+  font-size: 13px;
+}
+.serviceCardActive {
+  border-color: #C9A24B;
+  background: #151109;
+}
+
+.activeDot {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #0B0A09;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #E8CE85;
+}
+
+.dayCell:disabled {
+  opacity: 0.35;
+}
+
+.slotBtnActive {
+  background: linear-gradient(135deg, #E8CE85, #C9A24B);
+  color: #0B0A09;
+  border-color: transparent;
+}
+.tabsPage {
+  width: 100%;
+  max-width: 420px;
+  background: #0F0C09;
+  border: 1px solid #221D14;
+  border-radius: 24px;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.6);
+  font-family: 'Manrope', sans-serif;
+}
+
+.tabsBar {
+  display: flex;
+  gap: 8px;
+  padding: 14px;
+  border-bottom: 1px solid #1D1810;
+  background: #0F0C09;
+  overflow-x: auto;
+}
+
+.tabBtn {
+  border: 1px solid #2A241A;
+  background: #151109;
+  color: #9C9384;
+  padding: 10px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.tabBtnActive {
+  background: linear-gradient(135deg, #E8CE85, #C9A24B);
+  color: #0B0A09;
+  border-color: transparent;
+}
+
+.tabsContent {
+  padding: 22px;
+}

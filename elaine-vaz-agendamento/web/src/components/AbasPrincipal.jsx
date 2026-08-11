@@ -1,21 +1,20 @@
 import React, { useState } from "react";
-import Agendamento from "./Agendamento";
+import { MapPin, Phone, Instagram, Clock, ChevronRight } from "lucide-react";
+
+const TABS = [
+  { id: "sobre", label: "Sobre" },
+  { id: "horarios", label: "Horários" },
+  { id: "localizacao", label: "Localização" },
+  { id: "contato", label: "Contato" },
+];
 
 export default function AbasPrincipal() {
-  const [activeTab, setActiveTab] = useState("entrar");
-
-  const tabs = [
-    { id: "entrar", label: "Entrar" },
-    { id: "agendamento", label: "Agendamento" },
-    { id: "avaliacao", label: "Avaliação" },
-    { id: "rede-social", label: "Rede Social" },
-    { id: "localizacao", label: "Localização" },
-  ];
+  const [activeTab, setActiveTab] = useState("sobre");
 
   return (
     <div className="tabsPage">
-      <nav className="tabsBar" aria-label="Menu principal">
-        {tabs.map((tab) => (
+      <div className="tabsBar">
+        {TABS.map((tab) => (
           <button
             key={tab.id}
             type="button"
@@ -25,54 +24,102 @@ export default function AbasPrincipal() {
             {tab.label}
           </button>
         ))}
-      </nav>
+      </div>
 
       <div className="tabsContent">
-        {activeTab === "entrar" && (
-          <section className="tabPanel">
-            <h2>Entrar</h2>
-            <p>Login com a conta Google.</p>
-            <button className="primaryBtn">Continuar com Google</button>
-          </section>
-        )}
+        {activeTab === "sobre" && (
+          <div className="tabPanel">
+            <h2>Sobre nós</h2>
+            <p>
+              Somos um espaço criado para oferecer uma experiência elegante,
+              confortável e organizada. Aqui você encontra atendimento com
+              horário marcado e foco total na qualidade.
+            </p>
 
-        {activeTab === "agendamento" && (
-          <section className="tabPanel">
-            <Agendamento />
-          </section>
-        )}
-
-        {activeTab === "avaliacao" && (
-          <section className="tabPanel">
-            <h2>Avaliação</h2>
-            <p>Aqui ficam as avaliações enviadas pelos clientes.</p>
-          </section>
-        )}
-
-        {activeTab === "rede-social" && (
-          <section className="tabPanel">
-            <h2>Rede Social</h2>
-            <p>Instagram e contato via WhatsApp.</p>
             <div className="socialButtons">
-              <a
-                className="primaryBtn"
-                href="https://www.instagram.com/carolbronze_oficial/"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Instagram
-              </a>
-              <button className="secondaryBtn">WhatsApp</button>
+              <button type="button" className="secondaryBtn">
+                Ver serviços
+              </button>
+              <button type="button" className="secondaryBtn">
+                Falar no WhatsApp
+              </button>
             </div>
-          </section>
+          </div>
+        )}
+
+        {activeTab === "horarios" && (
+          <div className="tabPanel">
+            <h2>Horários</h2>
+            <p>Atendimento de segunda a domingo, conforme disponibilidade.</p>
+
+            <div style={{ marginTop: 18 }}>
+              <div className="summaryCard">
+                <div className="summaryRow">
+                  <span className="summaryLabel">Segunda a sexta</span>
+                  <span className="summaryValue">19:00 às 22:00</span>
+                </div>
+
+                <div className="summaryDivider" />
+
+                <div className="summaryRow">
+                  <span className="summaryLabel">Sábado</span>
+                  <span className="summaryValue">Fechado</span>
+                </div>
+
+                <div className="summaryDivider" />
+
+                <div className="summaryRow">
+                  <span className="summaryLabel">Domingo</span>
+                  <span className="summaryValue">10:00 às 12:00</span>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
 
         {activeTab === "localizacao" && (
-          <section className="tabPanel">
+          <div className="tabPanel">
             <h2>Localização</h2>
-            <p>Cel. Cardoso de Siqueira, 1744 — Vila Oliveira</p>
-            <div className="mapBox">Mini mapa aqui</div>
-          </section>
+            <p>Estamos em Mogi das Cruzes - SP, com fácil acesso para agendamento.</p>
+
+            <div className="mapBox">
+              <div style={{ textAlign: "center" }}>
+                <MapPin size={22} style={{ marginBottom: 8 }} />
+                <div>Mapa / endereço aqui</div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {activeTab === "contato" && (
+          <div className="tabPanel">
+            <h2>Contato</h2>
+            <p>Escolha o melhor canal para falar com a gente.</p>
+
+            <div className="socialButtons">
+              <button type="button" className="secondaryBtn">
+                <Phone size={16} style={{ marginRight: 6 }} />
+                WhatsApp
+              </button>
+
+              <button type="button" className="secondaryBtn">
+                <Instagram size={16} style={{ marginRight: 6 }} />
+                Instagram
+              </button>
+
+              <button type="button" className="secondaryBtn">
+                <Clock size={16} style={{ marginRight: 6 }} />
+                Agendar agora
+              </button>
+            </div>
+
+            <div style={{ marginTop: 18 }}>
+              <button type="button" className="secondaryBtn" style={{ width: "100%" }}>
+                Ver mais detalhes
+                <ChevronRight size={16} style={{ marginLeft: 6 }} />
+              </button>
+            </div>
+          </div>
         )}
       </div>
     </div>
