@@ -171,7 +171,7 @@ export default function AvaliarPage() {
           )}
 
           {status === "error" && (
-            <p className="loginError">Não foi possível enviar. Tente novamente.</p>
+            <p className="loginError">Sem conexão com o servidor. Verifique sua internet e tente novamente.</p>
           )}
 
           <button

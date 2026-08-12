@@ -9,6 +9,7 @@ import { useBlockedDates } from "./hooks/useBlockedDates";
 import { useReviews } from "./hooks/useReviews";
 import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
 import { buildWhatsappConfirmationLink } from "../../shared/whatsapp";
+import { sendConfirmationEmail } from "./sendConfirmationEmail";
 import { ReviewCard } from "./ReviewsPage.jsx";
 import "./styles.css";
 
@@ -284,6 +285,14 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         servico: service,
         dateKey,
         dateLabel,
+        horario: selectedTime,
+      });
+      sendConfirmationEmail({
+        nome: user.displayName,
+        email: user.email,
+        telefone: phone,
+        servico: service.name,
+        data: dateLabel,
         horario: selectedTime,
       });
       setWhatsappLink(
