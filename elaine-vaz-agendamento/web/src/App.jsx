@@ -14,7 +14,7 @@ import "./styles.css";
 
 const DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const CAROL_WHATSAPP = "5511931101976";
-const INSTAGRAM_HANDLE = "carol_sampio_bronze_massagem";
+const INSTAGRAM_HANDLE = "carol_sampaio_bronze_massagem";
 const ENDERECO = "Cel. Cardoso de Siqueira, 1744 — Vila Oliveira";
 
 const TABS = [
