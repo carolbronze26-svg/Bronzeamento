@@ -10,7 +10,7 @@ import { ReviewCard } from "./ReviewsPage.jsx";
 import "./styles.css";
 
 // E-mails autorizados a ver o painel administrativo.
-const ADMIN_EMAILS = ["carol.bronze26@gmail.com"];
+const ADMIN_EMAILS = ["carol.bronze26@gmail.com", "Nicknicole10@hotmail.com"];
 
 export default function AdminDashboard() {
   const { user, loading, login } = useAuth();
