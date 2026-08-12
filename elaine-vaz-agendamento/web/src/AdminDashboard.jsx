@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import {
   Chrome, Clock, CheckCircle2, XCircle, Phone, Mail, Calendar,
-  Search, Star, TrendingUp, Users, MessageCircle, CalendarOff, Trash2,
+  Search, Star, TrendingUp, Users, MessageCircle, CalendarOff, Trash2, Activity,
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { db } from "./firebase";
@@ -10,7 +10,14 @@ import { ReviewCard } from "./ReviewsPage.jsx";
 import "./styles.css";
 
 // E-mails autorizados a ver o painel administrativo.
-const ADMIN_EMAILS = ["carol.bronze26@gmail.com", "Nicknicole10@hotmail.com"];
+const ADMIN_EMAILS = ["carol.bronze26@gmail.com"];
+
+const ADMIN_TABS = [
+  { id: "andamento", label: "Andamento", icon: Activity },
+  { id: "cancelamento", label: "Cancelamento", icon: XCircle },
+  { id: "bloqueio", label: "Bloquear data", icon: CalendarOff },
+  { id: "avaliacao", label: "Avaliação", icon: Star },
+];
 
 export default function AdminDashboard() {
   const { user, loading, login } = useAuth();
@@ -21,6 +28,7 @@ export default function AdminDashboard() {
   const [bloqueios, setBloqueios] = useState([]);
   const [novaDataBloqueio, setNovaDataBloqueio] = useState("");
   const [motivoBloqueio, setMotivoBloqueio] = useState("");
+  const [activeTab, setActiveTab] = useState("andamento");
   const isAdmin = !!user && ADMIN_EMAILS.includes((user.email || "").toLowerCase());
 
   useEffect(() => {
@@ -93,7 +101,6 @@ export default function AdminDashboard() {
     }
   }
 
-  // conta quantas vezes cada cliente (por e-mail) já agendou, no total
   const contagemPorCliente = useMemo(() => {
     const map = {};
     agendamentos.forEach((a) => {
@@ -211,8 +218,29 @@ export default function AdminDashboard() {
               </div>
             )}
           </div>
+        </div>
 
-          <div className="adminFilters">
+        <div className="adminTabBar">
+          {ADMIN_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                className="adminTabItem"
+                style={{ color: active ? "#E8CE85" : "#6B6459" }}
+                onClick={() => setActiveTab(tab.id)}
+              >
+                <Icon size={15} />
+                <span className="tabLabel">{tab.label}</span>
+                {active && <span className="tabUnderline" />}
+              </button>
+            );
+          })}
+        </div>
+
+        {(activeTab === "andamento" || activeTab === "cancelamento") && (
+          <div className="adminFilters adminFiltersInline">
             <div className="adminSearchBox">
               <Search size={14} />
               <input
@@ -235,70 +263,79 @@ export default function AdminDashboard() {
               </button>
             )}
           </div>
-        </div>
+        )}
 
-        <div className="adminSection">
-          <div className="adminSectionTitle"><CalendarOff size={14} />Datas bloqueadas</div>
-          <div className="blockForm">
-            <input
-              type="date"
-              value={novaDataBloqueio}
-              onChange={(e) => setNovaDataBloqueio(e.target.value)}
-              className="adminDateInput"
+        {activeTab === "andamento" && (
+          <>
+            <AdminSection
+              title="Pendentes" icon={<Clock size={14} />} items={pendentes}
+              contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
             />
-            <input
-              type="text"
-              placeholder="Motivo (opcional)"
-              value={motivoBloqueio}
-              onChange={(e) => setMotivoBloqueio(e.target.value)}
-              className="adminSearchInput blockReasonInput"
+            <AdminSection
+              title="Concluídos" icon={<CheckCircle2 size={14} />} items={confirmados}
+              contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
             />
-            <button className="adminToggleBtn" onClick={adicionarBloqueio} disabled={!novaDataBloqueio}>
-              Bloquear
-            </button>
-          </div>
-          {bloqueios.length === 0 ? (
-            <p className="pMutedSmall">Nenhuma data bloqueada.</p>
-          ) : (
-            <div className="blockList">
-              {bloqueios.map((b) => (
-                <div key={b.data} className="blockItem">
-                  <span className="blockItemDate">
-                    {new Date(b.data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
-                  </span>
-                  {b.motivo && <span className="blockItemReason">{b.motivo}</span>}
-                  <button className="blockRemoveBtn" onClick={() => removerBloqueio(b.data)} aria-label="Remover bloqueio">
-                    <Trash2 size={13} />
-                  </button>
-                </div>
-              ))}
+          </>
+        )}
+
+        {activeTab === "cancelamento" && (
+          <AdminSection
+            title="Cancelados" icon={<XCircle size={14} />} items={cancelados}
+            contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
+          />
+        )}
+
+        {activeTab === "bloqueio" && (
+          <div className="adminSection">
+            <div className="blockForm">
+              <input
+                type="date"
+                value={novaDataBloqueio}
+                onChange={(e) => setNovaDataBloqueio(e.target.value)}
+                className="adminDateInput"
+              />
+              <input
+                type="text"
+                placeholder="Motivo (opcional)"
+                value={motivoBloqueio}
+                onChange={(e) => setMotivoBloqueio(e.target.value)}
+                className="adminSearchInput blockReasonInput"
+              />
+              <button className="adminToggleBtn" onClick={adicionarBloqueio} disabled={!novaDataBloqueio}>
+                Bloquear
+              </button>
             </div>
-          )}
-        </div>
+            {bloqueios.length === 0 ? (
+              <p className="pMutedSmall">Nenhuma data bloqueada.</p>
+            ) : (
+              <div className="blockList">
+                {bloqueios.map((b) => (
+                  <div key={b.data} className="blockItem">
+                    <span className="blockItemDate">
+                      {new Date(b.data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+                    </span>
+                    {b.motivo && <span className="blockItemReason">{b.motivo}</span>}
+                    <button className="blockRemoveBtn" onClick={() => removerBloqueio(b.data)} aria-label="Remover bloqueio">
+                      <Trash2 size={13} />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
-        <AdminSection
-          title="Pendentes" icon={<Clock size={14} />} items={pendentes}
-          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
-        />
-        <AdminSection
-          title="Concluídos" icon={<CheckCircle2 size={14} />} items={confirmados}
-          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
-        />
-        <AdminSection
-          title="Cancelados" icon={<XCircle size={14} />} items={cancelados}
-          contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
-        />
-
-        <div className="adminSection">
-          <div className="adminSectionTitle"><Star size={14} />Avaliações ({Object.keys(avaliacoes).length})</div>
-          {Object.keys(avaliacoes).length === 0 ? (
-            <p className="pMutedSmall">Ainda não há avaliações.</p>
-          ) : (
-            Object.entries(avaliacoes)
-              .sort((a, b) => (b[1].criadoEm?.seconds || 0) - (a[1].criadoEm?.seconds || 0))
-              .map(([id, av]) => <ReviewCard key={id} item={av} />)
-          )}
-        </div>
+        {activeTab === "avaliacao" && (
+          <div className="adminSection">
+            {Object.keys(avaliacoes).length === 0 ? (
+              <p className="pMutedSmall">Ainda não há avaliações.</p>
+            ) : (
+              Object.entries(avaliacoes)
+                .sort((a, b) => (b[1].criadoEm?.seconds || 0) - (a[1].criadoEm?.seconds || 0))
+                .map(([id, av]) => <ReviewCard key={id} item={av} />)
+            )}
+          </div>
+        )}
       </div>
     </div>
   );

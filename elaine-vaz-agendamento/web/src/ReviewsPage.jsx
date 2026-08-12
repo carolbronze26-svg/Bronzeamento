@@ -43,6 +43,13 @@ export function ReviewCard({ item }) {
           <Star key={i} size={14} fill={i < item.nota ? "#E8CE85" : "none"} color="#E8CE85" />
         ))}
       </div>
+      {item.midiaUrl && (
+        item.midiaTipo === "video" ? (
+          <video src={item.midiaUrl} controls className="reviewMedia" />
+        ) : (
+          <img src={item.midiaUrl} alt="" className="reviewMedia" />
+        )
+      )}
       {item.comentario && <p className="reviewCardComment">"{item.comentario}"</p>}
       <div className="reviewCardFooter">
         <span className="reviewCardName">{item.nome || "Cliente"}</span>
