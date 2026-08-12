@@ -33,6 +33,7 @@ export default function AvaliarPage() {
   const [comentario, setComentario] = useState("");
   const [arquivo, setArquivo] = useState(null);
   const [preview, setPreview] = useState(null);
+  const [anonimo, setAnonimo] = useState(false);
   const [status, setStatus] = useState("form"); // form | sending | done | error
 
   if (!agendamentoId) {
@@ -85,7 +86,7 @@ export default function AvaliarPage() {
 
       await setDoc(ref, {
         agendamentoId,
-        nome: nomeCliente,
+        nome: anonimo ? "Cliente anônimo" : nomeCliente,
         servico,
         nota,
         comentario: comentario.trim(),
@@ -150,6 +151,11 @@ export default function AvaliarPage() {
             onChange={(e) => setComentario(e.target.value)}
             rows={3}
           />
+
+          <label className="anonCheckbox">
+            <input type="checkbox" checked={anonimo} onChange={(e) => setAnonimo(e.target.checked)} />
+            Avaliar de forma anônima
+          </label>
 
           {!preview ? (
             <label className="attachBtn">

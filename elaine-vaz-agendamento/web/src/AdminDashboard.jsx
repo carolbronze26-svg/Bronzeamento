@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import {
   Chrome, Clock, CheckCircle2, XCircle, Phone, Mail, Calendar,
-  Search, Star, TrendingUp, Users, MessageCircle, CalendarOff, Trash2, Activity,
+  Search, Star, TrendingUp, Users, MessageCircle, CalendarOff, Trash2, Activity, Bell,
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { db } from "./firebase";
@@ -14,6 +14,7 @@ const ADMIN_EMAILS = ["carol.bronze26@gmail.com"];
 
 const ADMIN_TABS = [
   { id: "andamento", label: "Andamento", icon: Activity },
+  { id: "lembretes", label: "Lembretes", icon: Bell },
   { id: "cancelamento", label: "Cancelamento", icon: XCircle },
   { id: "bloqueio", label: "Bloquear data", icon: CalendarOff },
   { id: "avaliacao", label: "Avaliação", icon: Star },
@@ -125,6 +126,38 @@ export default function AdminDashboard() {
     () => Object.values(contagemPorCliente).filter((n) => n > 1).length,
     [contagemPorCliente]
   );
+
+  // Lembrete de manutenção: 15 dias após a 1ª sessão concluída,
+  // depois a cada 30 dias contados a partir da última sessão.
+  const lembretes = useMemo(() => {
+    const porCliente = {};
+    agendamentos
+      .filter((a) => a.status === "confirmado" && a.dataKey)
+      .forEach((a) => {
+        const key = clientKey(a);
+        if (!key) return;
+        if (!porCliente[key]) porCliente[key] = [];
+        porCliente[key].push(a);
+      });
+
+    const hoje = new Date();
+    hoje.setHours(0, 0, 0, 0);
+
+    return Object.values(porCliente)
+      .map((sessoes) => {
+        const ordenadas = [...sessoes].sort((a, b) => a.dataKey.localeCompare(b.dataKey));
+        const ultima = ordenadas[ordenadas.length - 1];
+        const [ano, mes, dia] = ultima.dataKey.split("-").map(Number);
+        const dataUltima = new Date(ano, mes - 1, dia);
+        const intervaloDias = ordenadas.length === 1 ? 15 : 30;
+        const proxima = new Date(dataUltima);
+        proxima.setDate(proxima.getDate() + intervaloDias);
+        const diasRestantes = Math.round((proxima - hoje) / (1000 * 60 * 60 * 24));
+        return { ...ultima, dataUltimaSessao: dataUltima, proximaManutencao: proxima, diasRestantes, totalSessoes: ordenadas.length };
+      })
+      .filter((l) => l.diasRestantes <= 5) // mostra vencidos e os próximos 5 dias
+      .sort((a, b) => a.diasRestantes - b.diasRestantes);
+  }, [agendamentos]);
 
   const mediaAvaliacao = useMemo(() => {
     const notas = Object.values(avaliacoes).map((v) => v.nota).filter((n) => typeof n === "number");
@@ -276,6 +309,54 @@ export default function AdminDashboard() {
               contagemPorCliente={contagemPorCliente} avaliacoes={avaliacoes} onSetStatus={setStatus} onDelete={excluirAgendamento}
             />
           </>
+        )}
+
+        {activeTab === "lembretes" && (
+          <div className="adminSection">
+            <div className="adminSectionTitle"><Bell size={14} />Manutenções para lembrar ({lembretes.length})</div>
+            <p className="pMutedSmall" style={{ marginBottom: 12 }}>
+              1ª manutenção 15 dias após a sessão · demais a cada 30 dias
+            </p>
+            {lembretes.length === 0 ? (
+              <p className="pMutedSmall">Nenhuma manutenção prevista pros próximos dias.</p>
+            ) : (
+              lembretes.map((l) => {
+                const atrasado = l.diasRestantes < 0;
+                const hoje = l.diasRestantes === 0;
+                const textoData = l.proximaManutencao.toLocaleDateString("pt-BR", { day: "2-digit", month: "long" });
+                const whatsappLembrete = l.telefone
+                  ? `https://wa.me/${l.telefone.replace(/\D/g, "")}?text=${encodeURIComponent(
+                      `Oi ${l.nome || ""}! Passando pra lembrar que já está na hora da sua manutenção de bronze 🌞 Bora agendar?`
+                    )}`
+                  : null;
+                return (
+                  <div key={l.id} className="adminCard">
+                    <div className="adminCardMain">
+                      <div className="adminCardName">{l.nome || "Sem nome"}</div>
+                      <div className="adminCardMeta"><Phone size={12} /> {l.telefone || "—"}</div>
+                      <div className="adminCardMeta">
+                        <Calendar size={12} /> Última sessão: {l.dataUltimaSessao.toLocaleDateString("pt-BR")} ({l.totalSessoes}ª sessão)
+                      </div>
+                      <div className="adminCardRating" style={{ color: atrasado ? "#E07856" : hoje ? "#E8CE85" : "#6FCF97" }}>
+                        {atrasado
+                          ? `Atrasado ${Math.abs(l.diasRestantes)} dia(s) — previsto ${textoData}`
+                          : hoje
+                          ? `Manutenção hoje!`
+                          : `Em ${l.diasRestantes} dia(s) — ${textoData}`}
+                      </div>
+                    </div>
+                    {whatsappLembrete && (
+                      <div className="adminCardActions">
+                        <a className="adminReviewBtn" href={whatsappLembrete} target="_blank" rel="noreferrer">
+                          <MessageCircle size={12} /> Enviar lembrete
+                        </a>
+                      </div>
+                    )}
+                  </div>
+                );
+              })
+            )}
+          </div>
         )}
 
         {activeTab === "cancelamento" && (
