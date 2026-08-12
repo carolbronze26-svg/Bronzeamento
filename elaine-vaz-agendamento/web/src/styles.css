@@ -49,6 +49,39 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   font-family: 'Manrope', sans-serif; flex-shrink: 0;
 }
 .installBannerClose { background: none; border: none; color: #6B6459; cursor: pointer; padding: 2px; flex-shrink: 0; }
+
+/* Barra de abas principal */
+.tabBar {
+  display: flex; border-bottom: 1px solid #1D1810; padding: 0 6px; overflow-x: auto;
+}
+.tabItem {
+  position: relative; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  flex: 1; min-width: 62px; background: none; border: none; padding: 10px 4px 12px; cursor: pointer;
+  font-family: 'Manrope', sans-serif; transition: color 200ms ease;
+}
+.tabLabel { font-size: 9.5px; font-weight: 600; white-space: nowrap; }
+.tabUnderline { position: absolute; bottom: 0; left: 18%; right: 18%; height: 2px; background: #C9A24B; border-radius: 2px; }
+.tabDot { position: absolute; top: 8px; right: 22%; width: 6px; height: 6px; border-radius: 50%; background: #6FCF97; }
+
+.userAvatar { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; margin-bottom: 14px; border: 2px solid #C9A24B; }
+
+/* Mini progresso dentro da aba Agendamento */
+.miniProgress { display: flex; align-items: center; justify-content: center; gap: 8px; margin-bottom: 20px; }
+.miniProgressLabel { font-size: 11.5px; letter-spacing: 0.2px; }
+.miniProgressDivider { width: 14px; height: 1px; background: #2A241A; }
+
+/* Rede social */
+.socialCard {
+  display: flex; align-items: center; gap: 12px; background: #151109; border: 1.5px solid #2A241A;
+  border-radius: 14px; padding: 14px 16px; margin-bottom: 10px; text-decoration: none;
+}
+.socialCardTitle { color: #F3ECDD; font-size: 13.5px; font-weight: 700; }
+.socialCardSubtitle { color: #8A8272; font-size: 12px; margin-top: 2px; }
+
+/* Localização */
+.mapWrap { border-radius: 14px; overflow: hidden; border: 1px solid #221D14; margin-bottom: 14px; }
+.mapFrame { width: 100%; height: 190px; border: none; display: block; filter: grayscale(0.15) contrast(1.05); }
+.addressBlock { display: flex; align-items: center; gap: 8px; color: #D8CBB0; font-size: 13px; }
 .brandRow { display: flex; align-items: center; gap: 10px; margin-bottom: 18px; }
 .monogram {
   width: 34px; height: 34px; border-radius: 50%;

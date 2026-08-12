@@ -1,21 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { collection, query, orderBy, onSnapshot } from "firebase/firestore";
+import React from "react";
 import { Star } from "lucide-react";
-import { db } from "./firebase";
+import { useReviews } from "./hooks/useReviews";
 import "./styles.css";
 
 export default function ReviewsPage() {
-  const [avaliacoes, setAvaliacoes] = useState([]);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const q = query(collection(db, "avaliacoes"), orderBy("criadoEm", "desc"));
-    const unsubscribe = onSnapshot(q, (snap) => {
-      setAvaliacoes(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
-      setLoading(false);
-    });
-    return unsubscribe;
-  }, []);
+  const { reviews, loading } = useReviews();
 
   return (
     <div className="page">
@@ -31,10 +20,10 @@ export default function ReviewsPage() {
         </div>
         <div className="body">
           {loading && <p className="pMutedSmall">Carregando...</p>}
-          {!loading && avaliacoes.length === 0 && (
+          {!loading && reviews.length === 0 && (
             <p className="pMutedSmall">Ainda não há avaliações por aqui.</p>
           )}
-          {avaliacoes.map((a) => (
+          {reviews.map((a) => (
             <ReviewCard key={a.id} item={a} />
           ))}
           <a href="/" className="backLink" style={{ display: "block", marginTop: 8 }}>
