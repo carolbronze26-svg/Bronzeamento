@@ -2,7 +2,10 @@ import { useCallback, useState } from "react";
 import { collection, addDoc, query, where, getDocs, serverTimestamp } from "firebase/firestore";
 import { db } from "../firebase";
 
-// Retorna os horários já reservados para uma data específica (formato "YYYY-MM-DD")
+// Retorna os horários já reservados — "pendente" e "confirmado" bloqueiam o slot.
+// Quando o admin clica "Confirmar presença", o status vira "confirmado" e
+// o horário passa a aparecer aqui automaticamente, ficando indisponível
+// para novos agendamentos.
 export function useOccupiedSlots() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,7 +24,7 @@ export function useOccupiedSlots() {
     } catch (err) {
       console.error("Erro ao buscar horários ocupados:", err);
       setError(err);
-      return []; // em caso de erro, não bloqueia nenhum horário
+      return [];
     } finally {
       setLoading(false);
     }
@@ -30,13 +33,11 @@ export function useOccupiedSlots() {
   return { fetchOccupied, loading, error };
 }
 
-// Cria o agendamento com status "pendente" — a confirmação definitiva
-// acontece quando o cliente fala com a Carol pelo WhatsApp.
 export function useCreateBooking() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
 
-  const createBooking = useCallback(async ({ usuarioId, nome, email, telefone, servico, dateKey, dateLabel, horario }) => {
+  const createBooking = useCallback(async ({ usuarioId, nome, email, telefone, servico, dateKey, dateLabel, horario, pacoteClienteId }) => {
     setSaving(true);
     setError(null);
     try {
@@ -48,6 +49,8 @@ export function useCreateBooking() {
         servicoId: servico.id,
         servicoNome: servico.name,
         profissional: servico.professional,
+        preco: servico.preco || null,
+        pacoteClienteId: pacoteClienteId || null,
         dataKey: dateKey,
         dataLabel: dateLabel,
         horario,
@@ -58,7 +61,7 @@ export function useCreateBooking() {
     } catch (err) {
       console.error("Erro ao criar agendamento:", err);
       setError(err);
-      throw err; // deixa quem chamou (App.jsx) saber que falhou
+      throw err;
     } finally {
       setSaving(false);
     }

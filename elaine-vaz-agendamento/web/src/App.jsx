@@ -2,15 +2,17 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock,
   Download, X, LogIn, LogOut, CalendarDays, Star, Instagram, MapPin, Phone,
+  Info, Package, CreditCard,
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { useCreateBooking, useOccupiedSlots } from "./hooks/useBooking";
 import { useBlockedDates } from "./hooks/useBlockedDates";
 import { useReviews } from "./hooks/useReviews";
-import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
+import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS, PACOTES, REGRA_CANCELAMENTO } from "../../shared/services";
 import { buildWhatsappConfirmationLink } from "../../shared/whatsapp";
 import { sendConfirmationEmail } from "./sendConfirmationEmail";
 import { ReviewCard } from "./ReviewsPage.jsx";
+import PackageCheckout from "./PackageCheckout.jsx";
 import "./styles.css";
 
 const DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
@@ -236,6 +238,7 @@ function AgendamentoTab({ user, onGoToEntrar }) {
   const [selectedTime, setSelectedTime] = useState(null);
   const [phone, setPhone] = useState("");
   const [whatsappLink, setWhatsappLink] = useState(null);
+  const [showPackageCheckout, setShowPackageCheckout] = useState(false);
 
   const today = new Date();
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
@@ -334,6 +337,7 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           selected={service}
           onSelect={setService}
           onNext={() => setSubStep(1)}
+          onOpenPackage={() => setShowPackageCheckout(true)}
         />
       )}
 
@@ -369,6 +373,10 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           onBack={() => setSubStep(1)}
         />
       )}
+
+      {showPackageCheckout && (
+        <PackageCheckout user={user} onClose={() => setShowPackageCheckout(false)} />
+      )}
     </div>
   );
 }
@@ -388,13 +396,21 @@ function MiniProgress({ step, steps }) {
   );
 }
 
-function ServiceStep({ selected, onSelect, onNext }) {
+// ---------------------------------------------------------------------------
+// Passo 1: Escolha do serviço — com tooltip informativo e preço
+// ---------------------------------------------------------------------------
+function ServiceStep({ selected, onSelect, onNext, onOpenPackage }) {
+  const pacote = PACOTES[0];
+  const servicoDoPacote = SERVICES.find((s) => s.id === pacote.servicoId);
+
   return (
     <div>
       <StepTitle title="Escolha o serviço" subtitle="Selecione o que você quer agendar" />
+
       <div className="serviceList">
         {SERVICES.map((s) => {
           const active = selected?.id === s.id;
+          const servicoPrevio = s.requerServicoPrevio && SERVICES.find((sv) => sv.id === s.requerServicoPrevio);
           return (
             <button
               key={s.id}
@@ -409,11 +425,15 @@ function ServiceStep({ selected, onSelect, onNext }) {
                 <div className="serviceName">
                   {s.name}
                   {s.tag && <span className="serviceTag">{s.tag}</span>}
+                  <ServiceInfoTooltip servico={s} servicoPrevio={servicoPrevio} />
                 </div>
                 <div className="serviceMeta">
                   <Clock size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
                   {s.duration} · com {s.professional}
                 </div>
+                {typeof s.preco === "number" && (
+                  <div className="servicePrice">R$ {s.preco.toFixed(2)}</div>
+                )}
               </div>
               <div className="radioOuter" style={{ borderColor: active ? "#E8CE85" : "#4A4436" }}>
                 {active && <div className="radioInner" />}
@@ -422,12 +442,56 @@ function ServiceStep({ selected, onSelect, onNext }) {
           );
         })}
       </div>
+
+      {/* Card de venda do pacote de 4 sessões */}
+      {pacote && servicoDoPacote && (
+        <div className="packageCard">
+          <div className="packageCardTitle">
+            <Package size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
+            {pacote.nome}
+          </div>
+          <div className="packageCardPrice">
+            R$ {pacote.precoTotal.toFixed(2)}
+            <span className="packageCardOld">
+              R$ {(pacote.precoUnitario * pacote.qtdSessoes).toFixed(2)}
+            </span>
+          </div>
+          <p className="pMutedSmall" style={{ margin: "6px 0 12px" }}>
+            {pacote.qtdSessoes} sessões de {servicoDoPacote.name} · válido por {pacote.validadeDias} dias
+          </p>
+          <button className="primaryBtn" style={{ width: "100%" }} onClick={onOpenPackage}>
+            <CreditCard size={15} style={{ marginRight: 6, verticalAlign: -2 }} />
+            Comprar pacote
+          </button>
+        </div>
+      )}
+
       <div className="footerNav">
         <button className="primaryBtn" style={{ flex: 1, opacity: selected ? 1 : 0.4, pointerEvents: selected ? "auto" : "none" }} onClick={onNext}>
           Continuar
         </button>
       </div>
     </div>
+  );
+}
+
+// Balão informativo (tooltip) explicando o serviço
+function ServiceInfoTooltip({ servico, servicoPrevio }) {
+  return (
+    <span
+      className="serviceInfoWrap"
+      onClick={(e) => e.stopPropagation()} // não deve selecionar o card ao clicar no ícone
+    >
+      <Info size={13} className="serviceInfoIcon" />
+      <span className="serviceInfoTooltip">
+        {servico.descricao}
+        {servicoPrevio && (
+          <span className="serviceInfoAlert">
+            ⚠️ É necessário já ter feito a "{servicoPrevio.name}" antes de agendar este serviço.
+          </span>
+        )}
+      </span>
+    </span>
   );
 }
 
@@ -438,6 +502,11 @@ function DateTimeStep({
   return (
     <div>
       <StepTitle title="Data e horário" subtitle="Seg a sex após 19h · Domingo das 10h às 18h · Sábado fechado" />
+
+      <div className="adminObservacaoBox" style={{ margin: "0 0 16px" }}>
+        {REGRA_CANCELAMENTO}
+      </div>
+
       <div className="calendarCard">
         <div className="calendarNav">
           <button className="navBtn" onClick={onPrevMonth} aria-label="Mês anterior"><ChevronLeft size={16} /></button>
@@ -536,6 +605,7 @@ function ConfirmStep({ service, dateLabel, selectedTime, userName, whatsappLink,
         <SummaryRow label="Serviço" value={service?.name} />
         <SummaryRow label="Duração" value={service?.duration} />
         <SummaryRow label="Profissional" value={service?.professional} />
+        {typeof service?.preco === "number" && <SummaryRow label="Valor" value={`R$ ${service.preco.toFixed(2)}`} />}
         <div className="summaryDivider" />
         <SummaryRow label="Data" value={dateLabel} capitalize />
         <SummaryRow label="Horário" value={selectedTime} />

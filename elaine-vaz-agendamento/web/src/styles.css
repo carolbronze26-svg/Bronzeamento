@@ -320,3 +320,53 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   margin-bottom: 14px; cursor: pointer; font-family: 'Manrope', sans-serif;
 }
 .anonCheckbox input { width: 15px; height: 15px; accent-color: #C9A24B; cursor: pointer; }
+/* Observação de cancelamento */
+.adminObservacaoBox {
+  background: #1F1710; border: 1px solid #5A3A2A; border-radius: 12px;
+  padding: 12px 14px; color: #E8CE85; font-size: 12px; line-height: 1.5;
+  margin: 0 22px 14px;
+}
+
+/* Tooltip de serviço */
+.serviceInfoWrap { position: relative; display: inline-flex; margin-left: 6px; }
+.serviceInfoIcon { color: #8A8272; cursor: pointer; }
+.serviceInfoTooltip {
+  display: none; position: absolute; top: 20px; left: 0; z-index: 20;
+  width: 220px; background: #1A1510; border: 1px solid #C9A24B; border-radius: 10px;
+  padding: 10px 12px; color: #F3ECDD; font-size: 11.5px; line-height: 1.4;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+}
+.serviceInfoWrap:hover .serviceInfoTooltip { display: block; }
+.serviceInfoAlert { color: #E8CE85; font-weight: 700; margin-top: 6px; display: block; }
+
+/* Preço do serviço */
+.servicePrice { color: #C9A24B; font-weight: 700; font-size: 12.5px; margin-top: 4px; }
+
+/* Modal genérico (reagendamento / pagamento) */
+.modalOverlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center; z-index: 100; padding: 20px;
+}
+.modalCard {
+  background: #0F0C09; border: 1px solid #2A241A; border-radius: 18px;
+  padding: 22px; width: 100%; max-width: 360px;
+}
+
+/* Métodos de pagamento */
+.paymentMethodRow { display: flex; gap: 8px; margin-top: 14px; }
+.paymentMethodBtn {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px;
+  background: #151109; border: 1.5px solid #2A241A; border-radius: 10px; padding: 10px 0;
+  color: #9C9384; font-size: 12px; font-weight: 600; cursor: pointer;
+  font-family: 'Manrope', sans-serif;
+}
+.paymentMethodBtn.active { border-color: #C9A24B; color: #E8CE85; background: #1F1A11; }
+
+/* Botão de comprar pacote */
+.packageCard {
+  background: linear-gradient(135deg,#1F1A11,#171310); border: 1.5px solid #C9A24B;
+  border-radius: 14px; padding: 16px; margin-bottom: 16px; text-align: center;
+}
+.packageCardTitle { color: #E8CE85; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
+.packageCardPrice { color: #F3ECDD; font-size: 20px; font-weight: 700; font-family: 'Cormorant Garamond', serif; }
+.packageCardOld { color: #6B6459; text-decoration: line-through; font-size: 12px; margin-left: 6px; }
