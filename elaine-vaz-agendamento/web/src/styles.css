@@ -450,3 +450,18 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   font-size: 13px;
   line-height: 1.4;
 }
+.adminConfirmBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  border: 1px solid #6FCF97;
+  background: transparent;
+  color: #6FCF97;
+  font-size: 13px;
+  cursor: pointer;
+}
+.adminConfirmBtn:hover {
+  background: rgba(111, 207, 151, 0.1);
+}

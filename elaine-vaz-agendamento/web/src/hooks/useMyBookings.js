@@ -72,3 +72,6 @@ export async function reagendarMeuAgendamento(item, novaData, novoHorario) {
     status: "pendente",
   });
 }
+export async function confirmarPresenca(item) {
+  await updateDoc(doc(db, "agendamentos", item.id), { status: "confirmado" });
+}

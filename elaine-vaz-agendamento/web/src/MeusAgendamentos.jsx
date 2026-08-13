@@ -1,9 +1,9 @@
 import React, { useMemo, useState } from "react";
 import { Calendar, Clock, XCircle, CheckCircle2, AlertCircle, RefreshCw, X } from "lucide-react";
-import { useMyBookings, cancelarMeuAgendamento, reagendarMeuAgendamento } from "./hooks/useMyBookings";
 import { useOccupiedSlots } from "./hooks/useBooking";
 import { useBlockedDates } from "./hooks/useBlockedDates";
 import { WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
+import { useMyBookings, cancelarMeuAgendamento, reagendarMeuAgendamento, confirmarPresenca } from "./hooks/useMyBookings";
 
 const STATUS_LABEL = {
   pendente: { label: "Pendente", color: "#E8CE85" },
@@ -23,6 +23,14 @@ export default function MeusAgendamentos({ user }) {
       alert(err.message);
     }
   }
+
+async function handleConfirmarPresenca(item) {
+  try {
+    await confirmarPresenca(item);
+  } catch (err) {
+    alert(err.message);
+  }
+}
 
   if (loading) return <p className="pMutedSmall">Carregando seus agendamentos...</p>;
 
@@ -63,15 +71,19 @@ export default function MeusAgendamentos({ user }) {
             </div>
             <div className="adminCardActions">
               {item.status === "pendente" && (
-                <>
-                  <button className="adminReopenBtn" onClick={() => setReagendando(item)}>
-                    <RefreshCw size={12} /> Reagendar
-                  </button>
-                  <button className="adminCancelBtn" onClick={() => handleCancelar(item)}>
-                    <XCircle size={12} /> Cancelar
-                  </button>
-                </>
-              )}
+  <>
+    <button className="adminReopenBtn" onClick={() => setReagendando(item)}>
+      <RefreshCw size={12} /> Reagendar
+    </button>
+    <button className="adminCancelBtn" onClick={() => handleCancelar(item)}>
+      <XCircle size={12} /> Cancelar
+    </button>
+    <button className="adminConfirmBtn" onClick={() => handleConfirmarPresenca(item)}>
+      <CheckCircle2 size={12} /> Confirmar Presença
+    </button>
+  </>
+)}
+
               {item.status === "confirmado" && (
                 <span className="adminCardRating" style={{ color: "#6FCF97" }}>
                   <CheckCircle2 size={12} /> Presença confirmada

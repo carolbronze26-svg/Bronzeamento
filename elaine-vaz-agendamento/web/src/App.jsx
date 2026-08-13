@@ -25,10 +25,10 @@ const ENDERECO = "Cel. Cardoso de Siqueira, 1744 — Vila Oliveira";
 const TABS = [
   { id: "entrar", label: "Entrar", icon: LogIn },
   { id: "agendamento", label: "Agendamento", icon: CalendarDays },
+  { id: "meus", label: "Meus Horários", icon: ListChecks },
   { id: "avaliacao", label: "Avaliação", icon: Star },
   { id: "social", label: "Rede Social", icon: Instagram },
   { id: "localizacao", label: "Localização", icon: MapPin },
-  { id: "meus", label: "Meus Horários", icon: ListChecks },
 ];
 
 function buildMonth(year, month) {
