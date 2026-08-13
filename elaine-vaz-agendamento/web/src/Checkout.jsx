@@ -90,4 +90,35 @@ export default function Checkout({ user, item, onClose }) {
               <button className={`paymentMethodBtn ${metodo === "credito" ? "active" : ""}`} onClick={() => setMetodo("credito")}>
                 <CreditCard size={16} /> Crédito
               </button>
-              <button className={`paymentMethodBtn ${metodo === "debito" ? "active" : ""}`} onClick={() =>
+              <button className={`paymentMethodBtn ${metodo === "debito" ? "active" : ""}`} onClick={() => setMetodo("debito")}>
+                <CreditCard size={16} /> Débito
+              </button>
+            </div>
+            <button className="primaryBtn" style={{ width: "100%", marginTop: 16 }} onClick={iniciarCompra}>
+              Pagar com {metodo === "pix" ? "Pix" : metodo === "credito" ? "Crédito" : "Débito"}
+            </button>
+          </>
+        )}
+
+        {status === "loading" && <p className="pMutedSmall">Gerando pagamento...</p>}
+
+        {status === "pix" && pixData && (
+          <div className="stepCenter">
+            <img src={`data:image/png;base64,${pixData.qr_code_base64}`} alt="QR Code Pix" style={{ width: 200, borderRadius: 12, marginTop: 12 }} />
+            <p className="pMutedSmall" style={{ marginTop: 10 }}>Escaneie o QR Code ou copie o código abaixo:</p>
+            <textarea className="reviewTextarea" readOnly value={pixData.qr_code} rows={3} />
+          </div>
+        )}
+
+        {status === "done" && (
+          <p className="pMuted">
+            Pagamento aprovado! {isPacote ? "Seu pacote já está disponível para agendar." : "Agora você pode agendar o serviço."}
+          </p>
+        )}
+        {status === "error" && <p className="loginError">Não foi possível processar o pagamento. Tente novamente.</p>}
+
+        <button className="backLink" onClick={onClose}>Fechar</button>
+      </div>
+    </div>
+  );
+}
