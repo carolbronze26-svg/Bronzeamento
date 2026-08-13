@@ -6,7 +6,7 @@ export const SERVICES = [
     duration: "90 min",
     professional: "Carol",
     tag: "Mais procurado",
-    preco: 80,
+    preco: 127.90,
     descricao:
       "Aplicação completa de bronzeamento. Ideal para quem está começando o processo ou quer retomar a cor.",
     requerServicoPrevio: null,
@@ -16,7 +16,7 @@ export const SERVICES = [
     name: "Manutenção do Bronze",
     duration: "90 min",
     professional: "Carol",
-    preco: 50,
+    preco: 127.90,
     descricao:
       "Retoque para manter a cor do bronzeamento já feito.",
     requerServicoPrevio: "bronze", // precisa ter feito "Sessão de Bronzeamento" antes
@@ -30,8 +30,8 @@ export const PACOTES = [
     servicoId: "bronze",
     nome: "Pacote 4 Sessões — Bronzeamento",
     qtdSessoes: 4,
-    precoUnitario: 80,
-    precoTotal: 280, // desconto de 40 sobre 320
+    precoUnitario: 127.90,
+    precoTotal: 450, // desconto de 40 sobre 320
     validadeDias: 90,
   },
 ];
@@ -40,7 +40,7 @@ export const PACOTES = [
 // - Segunda a sexta: somente após 19h
 // - Domingo: das 10h às 18h
 // - Sábado: sem atendimento
-export const WEEKDAY_SLOTS = ["19:30", "21:00", "21:30"];
+export const WEEKDAY_SLOTS = ["19:00", "20:30", "22:00"];
 export const SUNDAY_SLOTS = ["10:00", "11:30", "13:00", "14:30", "16:00", "17:30"];
 
 // Texto de regra de cancelamento — usado na aba de Agendamento
