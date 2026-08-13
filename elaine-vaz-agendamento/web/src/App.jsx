@@ -119,7 +119,7 @@ export default function App() {
           <div className="monogram">CS</div>
           <div>
             <div className="brandName">Carol Sampaio</div>
-            <div className="brandSub">Onde há uma mulher confiante, há brilho</div>
+            <div className="brandSub">Muito mais que um bronze perfeito, é cuidado, bem-estar e autoestima todos os dias</div>
           </div>
         </div>
 
