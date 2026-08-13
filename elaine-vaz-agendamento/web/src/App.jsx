@@ -14,6 +14,8 @@ import { sendConfirmationEmail } from "./sendConfirmationEmail";
 import { ReviewCard } from "./ReviewsPage.jsx";
 import Checkout from "./Checkout.jsx";
 import "./styles.css";
+import MeusAgendamentos from "./MeusAgendamentos.jsx";
+
 
 const DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const CAROL_WHATSAPP = "5511931101976";
@@ -26,6 +28,7 @@ const TABS = [
   { id: "avaliacao", label: "Avaliação", icon: Star },
   { id: "social", label: "Rede Social", icon: Instagram },
   { id: "localizacao", label: "Localização", icon: MapPin },
+  { id: "meus", label: "Meus Horários", icon: ListChecks },
 ];
 
 function buildMonth(year, month) {
@@ -123,16 +126,25 @@ export default function App() {
         <TabBar activeTab={activeTab} onChange={setActiveTab} loggedIn={!!user} />
 
         <div className="body">
-          {activeTab === "entrar" && (
-            <EntrarTab user={user} onLogin={login} onLogout={logout} authError={authError} />
-          )}
-          {activeTab === "agendamento" && (
-            <AgendamentoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} />
-          )}
-          {activeTab === "avaliacao" && <AvaliacaoTab />}
-          {activeTab === "social" && <SocialTab />}
-          {activeTab === "localizacao" && <LocalizacaoTab />}
-        </div>
+  {activeTab === "entrar" && (
+    <EntrarTab user={user} onLogin={login} onLogout={logout} authError={authError} />
+  )}
+  {activeTab === "agendamento" && (
+    <AgendamentoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} />
+  )}
+  {activeTab === "meus" && (
+    user ? (
+      <MeusAgendamentos user={user} />
+    ) : (
+      <div className="stepCenter">
+        <p className="pMuted">Faça login para ver seus agendamentos.</p>
+      </div>
+    )
+  )}
+  {activeTab === "avaliacao" && <AvaliacaoTab />}
+  {activeTab === "social" && <SocialTab />}
+  {activeTab === "localizacao" && <LocalizacaoTab />}
+</div>
       </div>
     </div>
   );
