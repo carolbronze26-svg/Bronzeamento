@@ -12,7 +12,7 @@ import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS, PACOTES, REGRA_CANCELAMENTO } fr
 import { buildWhatsappConfirmationLink } from "../../shared/whatsapp";
 import { sendConfirmationEmail } from "./sendConfirmationEmail";
 import { ReviewCard } from "./ReviewsPage.jsx";
-import PackageCheckout from "./PackageCheckout.jsx";
+import Checkout from "./Checkout.jsx";
 import "./styles.css";
 
 const DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
@@ -127,10 +127,7 @@ export default function App() {
             <EntrarTab user={user} onLogin={login} onLogout={logout} authError={authError} />
           )}
           {activeTab === "agendamento" && (
-            <AgendamentoTab
-              user={user}
-              onGoToEntrar={() => setActiveTab("entrar")}
-            />
+            <AgendamentoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} />
           )}
           {activeTab === "avaliacao" && <AvaliacaoTab />}
           {activeTab === "social" && <SocialTab />}
@@ -238,7 +235,7 @@ function AgendamentoTab({ user, onGoToEntrar }) {
   const [selectedTime, setSelectedTime] = useState(null);
   const [phone, setPhone] = useState("");
   const [whatsappLink, setWhatsappLink] = useState(null);
-  const [showPackageCheckout, setShowPackageCheckout] = useState(false);
+  const [checkoutItem, setCheckoutItem] = useState(null); // null | { tipo, id, nome, valor, qtdSessoes? }
 
   const today = new Date();
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
@@ -337,7 +334,23 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           selected={service}
           onSelect={setService}
           onNext={() => setSubStep(1)}
-          onOpenPackage={() => setShowPackageCheckout(true)}
+          onBuyPackage={() =>
+            setCheckoutItem({
+              tipo: "pacote",
+              id: PACOTES[0].id,
+              nome: PACOTES[0].nome,
+              valor: PACOTES[0].precoTotal,
+              qtdSessoes: PACOTES[0].qtdSessoes,
+            })
+          }
+          onBuyService={(s) =>
+            setCheckoutItem({
+              tipo: "servico",
+              id: s.id,
+              nome: s.name,
+              valor: s.preco,
+            })
+          }
         />
       )}
 
@@ -374,8 +387,8 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         />
       )}
 
-      {showPackageCheckout && (
-        <PackageCheckout user={user} onClose={() => setShowPackageCheckout(false)} />
+      {checkoutItem && (
+        <Checkout user={user} item={checkoutItem} onClose={() => setCheckoutItem(null)} />
       )}
     </div>
   );
@@ -397,11 +410,12 @@ function MiniProgress({ step, steps }) {
 }
 
 // ---------------------------------------------------------------------------
-// Passo 1: Escolha do serviço — com tooltip informativo e preço
+// Passo 1: Escolha do serviço — com tooltip informativo (modal centralizado) e preço
 // ---------------------------------------------------------------------------
-function ServiceStep({ selected, onSelect, onNext, onOpenPackage }) {
+function ServiceStep({ selected, onSelect, onNext, onBuyPackage, onBuyService }) {
   const pacote = PACOTES[0];
   const servicoDoPacote = SERVICES.find((s) => s.id === pacote.servicoId);
+  const [tooltipServico, setTooltipServico] = useState(null); // serviço aberto no modal
 
   return (
     <div>
@@ -412,20 +426,30 @@ function ServiceStep({ selected, onSelect, onNext, onOpenPackage }) {
           const active = selected?.id === s.id;
           const servicoPrevio = s.requerServicoPrevio && SERVICES.find((sv) => sv.id === s.requerServicoPrevio);
           return (
-            <button
+            <div
               key={s.id}
               onClick={() => onSelect(s)}
               className="serviceCard"
               style={{
                 borderColor: active ? "#C9A24B" : "#2A241A",
                 background: active ? "linear-gradient(135deg,#1F1A11,#171310)" : "#151109",
+                cursor: "pointer",
               }}
             >
               <div style={{ flex: 1, textAlign: "left" }}>
                 <div className="serviceName">
                   {s.name}
                   {s.tag && <span className="serviceTag">{s.tag}</span>}
-                  <ServiceInfoTooltip servico={s} servicoPrevio={servicoPrevio} />
+                  <button
+                    className="serviceInfoIconBtn"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setTooltipServico({ servico: s, servicoPrevio });
+                    }}
+                    aria-label="Ver detalhes do serviço"
+                  >
+                    <Info size={13} />
+                  </button>
                 </div>
                 <div className="serviceMeta">
                   <Clock size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
@@ -434,16 +458,25 @@ function ServiceStep({ selected, onSelect, onNext, onOpenPackage }) {
                 {typeof s.preco === "number" && (
                   <div className="servicePrice">R$ {s.preco.toFixed(2)}</div>
                 )}
+                <button
+                  className="ghostBtnSmall"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onBuyService(s);
+                  }}
+                >
+                  <CreditCard size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
+                  Pagar agora
+                </button>
               </div>
               <div className="radioOuter" style={{ borderColor: active ? "#E8CE85" : "#4A4436" }}>
                 {active && <div className="radioInner" />}
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
 
-      {/* Card de venda do pacote de 4 sessões */}
       {pacote && servicoDoPacote && (
         <div className="packageCard">
           <div className="packageCardTitle">
@@ -457,9 +490,9 @@ function ServiceStep({ selected, onSelect, onNext, onOpenPackage }) {
             </span>
           </div>
           <p className="pMutedSmall" style={{ margin: "6px 0 12px" }}>
-            {pacote.qtdSessoes} sessões de {servicoDoPacote.name} · válido por {pacote.validadeDias} dias
+            {pacote.qtdSessoes} sessões de {servicoDoPacote.name}
           </p>
-          <button className="primaryBtn" style={{ width: "100%" }} onClick={onOpenPackage}>
+          <button className="primaryBtn" style={{ width: "100%" }} onClick={onBuyPackage}>
             <CreditCard size={15} style={{ marginRight: 6, verticalAlign: -2 }} />
             Comprar pacote
           </button>
@@ -467,31 +500,44 @@ function ServiceStep({ selected, onSelect, onNext, onOpenPackage }) {
       )}
 
       <div className="footerNav">
-        <button className="primaryBtn" style={{ flex: 1, opacity: selected ? 1 : 0.4, pointerEvents: selected ? "auto" : "none" }} onClick={onNext}>
+        <button
+          className="primaryBtn"
+          style={{ flex: 1, opacity: selected ? 1 : 0.4, pointerEvents: selected ? "auto" : "none" }}
+          onClick={onNext}
+        >
           Continuar
         </button>
       </div>
+
+      {tooltipServico && (
+        <ServiceInfoModal
+          servico={tooltipServico.servico}
+          servicoPrevio={tooltipServico.servicoPrevio}
+          onClose={() => setTooltipServico(null)}
+        />
+      )}
     </div>
   );
 }
 
-// Balão informativo (tooltip) explicando o serviço
-function ServiceInfoTooltip({ servico, servicoPrevio }) {
+// Modal de descrição centralizado na tela
+function ServiceInfoModal({ servico, servicoPrevio, onClose }) {
   return (
-    <span
-      className="serviceInfoWrap"
-      onClick={(e) => e.stopPropagation()} // não deve selecionar o card ao clicar no ícone
-    >
-      <Info size={13} className="serviceInfoIcon" />
-      <span className="serviceInfoTooltip">
-        {servico.descricao}
+    <>
+      <div className="tooltipOverlay" onClick={onClose} />
+      <div className="tooltipCentered">
+        <button className="tooltipClose" onClick={onClose} aria-label="Fechar">
+          <X size={16} />
+        </button>
+        <h3 className="tooltipTitle">{servico.name}</h3>
+        <p className="tooltipText">{servico.descricao}</p>
         {servicoPrevio && (
-          <span className="serviceInfoAlert">
+          <p className="tooltipWarning">
             ⚠️ É necessário já ter feito a "{servicoPrevio.name}" antes de agendar este serviço.
-          </span>
+          </p>
         )}
-      </span>
-    </span>
+      </div>
+    </>
   );
 }
 

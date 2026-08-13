@@ -370,3 +370,83 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 .packageCardTitle { color: #E8CE85; font-size: 14px; font-weight: 700; margin-bottom: 4px; }
 .packageCardPrice { color: #F3ECDD; font-size: 20px; font-weight: 700; font-family: 'Cormorant Garamond', serif; }
 .packageCardOld { color: #6B6459; text-decoration: line-through; font-size: 12px; margin-left: 6px; }
+.tooltipOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+}
+
+.serviceInfoIconBtn {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 6px;
+  background: none;
+  border: none;
+  color: #C9A24B;
+  cursor: pointer;
+  padding: 2px;
+  vertical-align: -2px;
+}
+
+.ghostBtnSmall {
+  margin-top: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+  border: 1px solid #2A241A;
+  background: transparent;
+  color: #E8CE85;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.tooltipOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  z-index: 1000;
+}
+
+.tooltipCentered {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 1001;
+  background: #1a1611;
+  border: 1px solid #2A241A;
+  border-radius: 14px;
+  padding: 22px 20px;
+  max-width: 320px;
+  width: 88%;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.5);
+}
+
+.tooltipClose {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  color: #999;
+  cursor: pointer;
+}
+
+.tooltipTitle {
+  color: #E8CE85;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.tooltipText {
+  color: #E5DFD3;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.tooltipWarning {
+  color: #f5a623;
+  margin-top: 12px;
+  font-size: 13px;
+  line-height: 1.4;
+}
