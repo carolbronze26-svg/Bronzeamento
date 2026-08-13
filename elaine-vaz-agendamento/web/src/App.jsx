@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock,
   Download, X, LogIn, LogOut, CalendarDays, Star, Instagram, MapPin, Phone,
-  Info, Package, CreditCard,
+  Info, Package, CreditCard, ListChecks,
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { useCreateBooking, useOccupiedSlots } from "./hooks/useBooking";
