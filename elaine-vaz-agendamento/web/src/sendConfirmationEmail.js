@@ -24,8 +24,10 @@ export async function sendConfirmationEmail({ nome, email, telefone, servico, da
       horario: horario || "",
       assunto: `Agendamento - ${nome || ""}`,
       mensagem_html: buildConfirmationEmailHtml({ nome, email, telefone, servico, data, horario }),
+      cc_email: "nickcole10@gmail.com, sampaiocfs@gmail.com",
     });
   } catch (err) {
     console.error("Erro ao enviar e-mail de confirmação:", err);
   }
 }
+
