@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Calendar, Clock, XCircle, CheckCircle2, AlertCircle, RefreshCw, X } from "lucide-react";
 import { useOccupiedSlots } from "./hooks/useBooking";
-import { useBlockedDates } from "./hooks/useBlockedDates";
+import { useBlockedDates, isDiaTotalmenteBloqueado, getHorariosBloqueados } from "./hooks/useBlockedDates";
 import { WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
 import { useMyBookings, cancelarMeuAgendamento, reagendarMeuAgendamento, confirmarPresenca } from "./hooks/useMyBookings";
 
@@ -24,13 +24,13 @@ export default function MeusAgendamentos({ user }) {
     }
   }
 
-async function handleConfirmarPresenca(item) {
-  try {
-    await confirmarPresenca(item);
-  } catch (err) {
-    alert(err.message);
+  async function handleConfirmarPresenca(item) {
+    try {
+      await confirmarPresenca(item);
+    } catch (err) {
+      alert(err.message);
+    }
   }
-}
 
   if (loading) return <p className="pMutedSmall">Carregando seus agendamentos...</p>;
 
@@ -71,18 +71,18 @@ async function handleConfirmarPresenca(item) {
             </div>
             <div className="adminCardActions">
               {item.status === "pendente" && (
-  <>
-    <button className="adminReopenBtn" onClick={() => setReagendando(item)}>
-      <RefreshCw size={12} /> Reagendar
-    </button>
-    <button className="adminCancelBtn" onClick={() => handleCancelar(item)}>
-      <XCircle size={12} /> Cancelar
-    </button>
-    <button className="adminConfirmBtn" onClick={() => handleConfirmarPresenca(item)}>
-      <CheckCircle2 size={12} /> Confirmar Presença
-    </button>
-  </>
-)}
+                <>
+                  <button className="adminReopenBtn" onClick={() => setReagendando(item)}>
+                    <RefreshCw size={12} /> Reagendar
+                  </button>
+                  <button className="adminCancelBtn" onClick={() => handleCancelar(item)}>
+                    <XCircle size={12} /> Cancelar
+                  </button>
+                  <button className="adminConfirmBtn" onClick={() => handleConfirmarPresenca(item)}>
+                    <CheckCircle2 size={12} /> Confirmar Presença
+                  </button>
+                </>
+              )}
 
               {item.status === "confirmado" && (
                 <span className="adminCardRating" style={{ color: "#6FCF97" }}>
@@ -112,12 +112,22 @@ function ReagendarModal({ item, onClose }) {
 
   const isSunday = novaData ? new Date(novaData + "T00:00:00").getDay() === 0 : false;
   const isSaturday = novaData ? new Date(novaData + "T00:00:00").getDay() === 6 : false;
-  const isBlocked = novaData ? blockedDates.has(novaData) : false;
+
+  // Dia todo bloqueado (sem horários específicos definidos)
+  const isBlocked = novaData ? isDiaTotalmenteBloqueado(blockedDates, novaData) : false;
+
+  // Horários específicos bloqueados nesse dia
+  const horariosBloqueados = novaData ? getHorariosBloqueados(blockedDates, novaData) : [];
 
   const allSlots = isSunday ? SUNDAY_SLOTS : WEEKDAY_SLOTS;
   const availableSlots = useMemo(
-    () => allSlots.filter((t) => !occupied.includes(t) || t === item.horario),
-    [allSlots, occupied, item.horario]
+    () =>
+      allSlots.filter(
+        (t) =>
+          (!occupied.includes(t) || t === item.horario) &&
+          !horariosBloqueados.includes(t)
+      ),
+    [allSlots, occupied, item.horario, horariosBloqueados]
   );
 
   async function handleDataChange(e) {
@@ -166,7 +176,7 @@ function ReagendarModal({ item, onClose }) {
         />
 
         {isSaturday && <p className="loginError" style={{ marginTop: 8 }}>Sábado é fechado. Escolha outra data.</p>}
-        {isBlocked && <p className="loginError" style={{ marginTop: 8 }}>Essa data está bloqueada. Escolha outra.</p>}
+        {isBlocked && <p className="loginError" style={{ marginTop: 8 }}>Essa data está totalmente bloqueada. Escolha outra.</p>}
 
         {novaData && !isSaturday && !isBlocked && (
           <div className="slotsWrap" style={{ marginTop: 12 }}>

@@ -1,8 +1,7 @@
-// Lista de serviços oferecidos + valores e pacote de sessões.
 export const SERVICES = [
   {
     id: "bronze",
-    name: "Sessão de Bronzeamento",
+    name: "Bronzeamento", // ANTES: "Sessão de Bronzeamento"
     duration: "90 min",
     professional: "Carol",
     tag: "Mais procurado",
@@ -19,22 +18,22 @@ export const SERVICES = [
     preco: 127.90,
     descricao:
       "Retoque para manter a cor do bronzeamento já feito.",
-    requerServicoPrevio: "bronze", // precisa ter feito "Sessão de Bronzeamento" antes
+    requerServicoPrevio: "bronze",
   },
 ];
 
-// Pacote de 4 sessões (referente à "Sessão de Bronzeamento")
 export const PACOTES = [
   {
     id: "pacote4",
     servicoId: "bronze",
-    nome: "Pacote 4 Sessões — Bronzeamento",
+    nome: "4 sessões de Bronzeamento", // ANTES: "Pacote 4 Sessões — Bronzeamento"
     qtdSessoes: 4,
     precoUnitario: 127.90,
-    precoTotal: 450, // desconto de 40 sobre 320
+    precoTotal: 450,
     validadeDias: 90,
   },
 ];
+
 
 // Horários de atendimento:
 // - Segunda a sexta: somente após 19h

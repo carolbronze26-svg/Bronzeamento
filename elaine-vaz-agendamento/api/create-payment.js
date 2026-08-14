@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { title, price, referenciaId, tipo, clienteEmail } = req.body;
+    const { title, price, referenciaId, tipo, itemId, clienteEmail } = req.body;
 
     const preference = new Preference(client);
 

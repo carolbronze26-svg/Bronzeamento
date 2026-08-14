@@ -8,6 +8,7 @@ import { useAuth } from "./hooks/useAuth";
 import { db } from "./firebase";
 import { ReviewCard } from "./ReviewsPage.jsx";
 import "./styles.css";
+import { WEEKDAY_SLOTS, SUNDAY_SLOTS } from "./services.js"; // ajuste o caminho se necessário
 
 const ADMIN_EMAILS = ["carol.bronze26@gmail.com"];
 
@@ -32,6 +33,7 @@ export default function AdminDashboard() {
   const [dataFiltro, setDataFiltro] = useState("");
   const [bloqueios, setBloqueios] = useState([]);
   const [novaDataBloqueio, setNovaDataBloqueio] = useState("");
+  const [horariosSelecionados, setHorariosSelecionados] = useState([]);
   const [motivoBloqueio, setMotivoBloqueio] = useState("");
   const [activeTab, setActiveTab] = useState("agendado");
   const [reagendando, setReagendando] = useState(null); // item sendo reagendado
@@ -71,18 +73,21 @@ export default function AdminDashboard() {
   }, [isAdmin]);
 
   async function adicionarBloqueio() {
-    if (!novaDataBloqueio) return;
-    try {
-      await setDoc(doc(db, "bloqueios", novaDataBloqueio), {
-        motivo: motivoBloqueio.trim(),
-        criadoEm: serverTimestamp(),
-      });
-      setNovaDataBloqueio("");
-      setMotivoBloqueio("");
-    } catch (err) {
-      alert("Não foi possível bloquear essa data. Tente novamente.");
-    }
+  if (!novaDataBloqueio || horariosSelecionados.length === 0) return;
+  try {
+    await setDoc(doc(db, "bloqueios", novaDataBloqueio), {
+      horarios: horariosSelecionados,
+      motivo: motivoBloqueio.trim(),
+      criadoEm: serverTimestamp(),
+    }, { merge: true });
+    setNovaDataBloqueio("");
+    setHorariosSelecionados([]);
+    setMotivoBloqueio("");
+  } catch (err) {
+    alert("Não foi possível bloquear essa data. Tente novamente.");
   }
+}
+
 
   async function removerBloqueio(dataKey) {
     try {
@@ -92,6 +97,22 @@ export default function AdminDashboard() {
     }
   }
 
+   // 👇 ADICIONE ESSA FUNÇÃO NOVA AQUI
+  async function removerHorarioBloqueado(dataKey, horario) {
+    const bloqueio = bloqueios.find((b) => b.data === dataKey);
+    if (!bloqueio) return;
+    const novosHorarios = (bloqueio.horarios || []).filter((h) => h !== horario);
+    try {
+      if (novosHorarios.length === 0) {
+        await deleteDoc(doc(db, "bloqueios", dataKey));
+      } else {
+        await setDoc(doc(db, "bloqueios", dataKey), { ...bloqueio, horarios: novosHorarios }, { merge: true });
+      }
+    } catch (err) {
+      alert("Não foi possível remover o horário. Tente novamente.");
+    }
+  }
+  
   async function excluirAgendamento(item) {
     if (!window.confirm(`Excluir o agendamento de ${item.nome || "cliente sem nome"} permanentemente?`)) return;
     try {
@@ -126,6 +147,20 @@ export default function AdminDashboard() {
     }
     await setStatus(item, "cancelado");
   }
+
+  function slotsDoDia(dataStr) {
+  if (!dataStr) return [];
+  const diaSemana = new Date(dataStr + "T00:00:00").getDay(); // 0=domingo ... 6=sábado
+  if (diaSemana === 0) return SUNDAY_SLOTS;
+  if (diaSemana === 6) return []; // sábado sem atendimento
+  return WEEKDAY_SLOTS;
+}
+
+function toggleHorario(horario) {
+  setHorariosSelecionados((prev) =>
+    prev.includes(horario) ? prev.filter((h) => h !== horario) : [...prev, horario]
+  );
+}
 
   function abrirReagendamento(item) {
     setReagendando(item);
@@ -420,44 +455,87 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === "bloqueio" && (
-          <div className="adminSection">
-            <div className="blockForm">
-              <input
-                type="date"
-                value={novaDataBloqueio}
-                onChange={(e) => setNovaDataBloqueio(e.target.value)}
-                className="adminDateInput"
-              />
-              <input
-                type="text"
-                placeholder="Motivo (opcional)"
-                value={motivoBloqueio}
-                onChange={(e) => setMotivoBloqueio(e.target.value)}
-                className="adminSearchInput blockReasonInput"
-              />
-              <button className="adminToggleBtn" onClick={adicionarBloqueio} disabled={!novaDataBloqueio}>
-                Bloquear
-              </button>
-            </div>
-            {bloqueios.length === 0 ? (
-              <p className="pMutedSmall">Nenhuma data bloqueada.</p>
-            ) : (
-              <div className="blockList">
-                {bloqueios.map((b) => (
-                  <div key={b.data} className="blockItem">
-                    <span className="blockItemDate">
-                      {new Date(b.data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
-                    </span>
-                    {b.motivo && <span className="blockItemReason">{b.motivo}</span>}
-                    <button className="blockRemoveBtn" onClick={() => removerBloqueio(b.data)} aria-label="Remover bloqueio">
-                      <Trash2 size={13} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
+  <div className="adminSection">
+    <div className="blockForm" style={{ flexDirection: "column", alignItems: "stretch", gap: 12 }}>
+      <input
+        type="date"
+        value={novaDataBloqueio}
+        onChange={(e) => { setNovaDataBloqueio(e.target.value); setHorariosSelecionados([]); }}
+        className="adminDateInput"
+      />
+
+      {novaDataBloqueio && (
+        slotsDoDia(novaDataBloqueio).length === 0 ? (
+          <p className="pMutedSmall">Sem atendimento neste dia.</p>
+        ) : (
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+            {slotsDoDia(novaDataBloqueio).map((h) => {
+              const ativo = horariosSelecionados.includes(h);
+              return (
+                <button
+                  key={h}
+                  type="button"
+                  onClick={() => toggleHorario(h)}
+                  className="adminToggleBtn"
+                  style={{
+                    background: ativo ? "#E8CE85" : "transparent",
+                    color: ativo ? "#0B0A09" : "#F3ECDD",
+                    border: "1.5px solid #2A241A",
+                  }}
+                >
+                  {h}
+                </button>
+              );
+            })}
           </div>
-        )}
+        )
+      )}
+
+      <input
+        type="text"
+        placeholder="Motivo (opcional)"
+        value={motivoBloqueio}
+        onChange={(e) => setMotivoBloqueio(e.target.value)}
+        className="adminSearchInput blockReasonInput"
+      />
+      <button
+        className="adminToggleBtn"
+        onClick={adicionarBloqueio}
+        disabled={!novaDataBloqueio || horariosSelecionados.length === 0}
+      >
+        Bloquear horários selecionados
+      </button>
+    </div>
+
+    {bloqueios.length === 0 ? (
+      <p className="pMutedSmall">Nenhuma data bloqueada.</p>
+    ) : (
+      <div className="blockList">
+        {bloqueios.map((b) => (
+          <div key={b.data} className="blockItem" style={{ flexDirection: "column", alignItems: "flex-start", gap: 6 }}>
+            <span className="blockItemDate">
+              {new Date(b.data + "T00:00:00").toLocaleDateString("pt-BR", { day: "2-digit", month: "long", year: "numeric" })}
+            </span>
+            {b.motivo && <span className="blockItemReason">{b.motivo}</span>}
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+              {(b.horarios || []).map((h) => (
+                <span key={h} style={{ display: "flex", alignItems: "center", gap: 4, background: "#1F1A11", borderRadius: 8, padding: "3px 8px", fontSize: 12 }}>
+                  {h}
+                  <button className="blockRemoveBtn" onClick={() => removerHorarioBloqueado(b.data, h)} aria-label="Remover horário" style={{ padding: 0 }}>
+                    <Trash2 size={11} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <button className="blockRemoveBtn" onClick={() => removerBloqueio(b.data)}>
+              Remover data toda
+            </button>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+)}
 
         {activeTab === "avaliacao" && (
           <div className="adminSection">

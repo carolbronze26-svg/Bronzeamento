@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { useCreateBooking, useOccupiedSlots } from "./hooks/useBooking";
-import { useBlockedDates } from "./hooks/useBlockedDates";
+import { useBlockedDates, isDiaTotalmenteBloqueado, getHorariosBloqueados } from "./hooks/useBlockedDates";
 import { useReviews } from "./hooks/useReviews";
 import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS, PACOTES, REGRA_CANCELAMENTO } from "../../shared/services";
 import { buildWhatsappConfirmationLink } from "../../shared/whatsapp";
@@ -263,12 +263,18 @@ function AgendamentoTab({ user, onGoToEntrar }) {
     const t = new Date(today.getFullYear(), today.getMonth(), today.getDate());
     return cellDate < t;
   };
-  const isBlocked = (d) => d && blockedDates.has(toDateKey(viewDate.getFullYear(), viewDate.getMonth(), d));
+  const isBlocked = (d) =>
+  d && isDiaTotalmenteBloqueado(blockedDates, toDateKey(viewDate.getFullYear(), viewDate.getMonth(), d));
   const isClosed = (d) => isSaturday(d) || isBlocked(d);
   const isDisabled = (d) => isPast(d) || isClosed(d);
 
+  const selectedDateKey = selectedDay ? toDateKey(viewDate.getFullYear(), viewDate.getMonth(), selectedDay) : null;
+  const horariosBloqueados = selectedDateKey ? getHorariosBloqueados(blockedDates, selectedDateKey) : [];
+
   const allSlots = isSunday(selectedDay) ? SUNDAY_SLOTS : WEEKDAY_SLOTS;
-  const availableSlots = allSlots.filter((t) => !occupied.includes(t));
+  const availableSlots = allSlots.filter(
+  (t) => !occupied.includes(t) && !horariosBloqueados.includes(t)
+  );
 
   async function handleSelectDay(d) {
     setSelectedDay(d);
