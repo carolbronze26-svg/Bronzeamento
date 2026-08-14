@@ -10,7 +10,12 @@ import { ReviewCard } from "./ReviewsPage.jsx";
 import "./styles.css";
 import { WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services"; // ajuste o caminho se necessário
 
-const ADMIN_EMAILS = ["carol.bronze26@gmail.com", "nickcole10.@gmail.com", "sampaiocfs@gmail.com"];
+const ADMIN_EMAILS = [
+  "carol.bronze26@gmail.com",
+  "nickcole10.@gmail.com",
+  "sampaiocfs@gmail.com",
+];
+
 
 const ADMIN_TABS = [
   { id: "agendado", label: "Agendado", icon: Activity },
