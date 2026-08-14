@@ -26,7 +26,7 @@ export const PACOTES = [
   {
     id: "pacote4",
     servicoId: "bronze",
-    nome: "4 sessões de Bronzeamento", // ANTES: "Pacote 4 Sessões — Bronzeamento"
+    nome: "Pacote Mensal",
     qtdSessoes: 4,
     precoUnitario: 127.90,
     precoTotal: 450,
