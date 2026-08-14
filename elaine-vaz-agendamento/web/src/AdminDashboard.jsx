@@ -12,7 +12,7 @@ import { WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services"; // ajuste o
 
 const ADMIN_EMAILS = [
   "carol.bronze26@gmail.com",
-  "nickcole10.@gmail.com",
+  "nicknicole10.ns@gmail.com",
   "sampaiocfs@gmail.com",
 ];
 
