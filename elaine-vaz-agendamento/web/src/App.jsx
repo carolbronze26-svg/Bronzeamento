@@ -476,17 +476,7 @@ function ServiceStep({ selected, onSelect, onNext, onBuyPackage, onBuyService })
                 {typeof s.preco === "number" && (
                   <div className="servicePrice">R$ {s.preco.toFixed(2)}</div>
                 )}
-                <button
-                  className="ghostBtnSmall"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onBuyService(s);
-                  }}
-                >
-                  <CreditCard size={13} style={{ marginRight: 4, verticalAlign: -2 }} />
-                  Pagar agora
-                </button>
-              </div>
+                </div>
               <div className="radioOuter" style={{ borderColor: active ? "#E8CE85" : "#4A4436" }}>
                 {active && <div className="radioInner" />}
               </div>
@@ -512,7 +502,7 @@ function ServiceStep({ selected, onSelect, onNext, onBuyPackage, onBuyService })
           </p>
           <button className="primaryBtn" style={{ width: "100%" }} onClick={onBuyPackage}>
             <CreditCard size={15} style={{ marginRight: 6, verticalAlign: -2 }} />
-            Comprar pacote
+            Contratar Pacote
           </button>
         </div>
       )}

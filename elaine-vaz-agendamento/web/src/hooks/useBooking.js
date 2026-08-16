@@ -15,10 +15,10 @@ export function useOccupiedSlots() {
     setError(null);
     try {
       const q = query(
-        collection(db, "agendamentos"),
-        where("dataKey", "==", dateKey),
-        where("status", "in", ["pendente", "confirmado"])
-      );
+           collection(db, "agendamentos"),
+          where("dataKey", "==", dateKey),
+           where("status", "==", "confirmado") // só bloqueia após confirmar presença
+        );
       const snap = await getDocs(q);
       return snap.docs.map((d) => d.data().horario);
     } catch (err) {

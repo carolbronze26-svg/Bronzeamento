@@ -6,6 +6,7 @@ import { useOccupiedSlots, useCreateBooking } from "./hooks/useBooking";
 import { useBlockedDates, isDiaTotalmenteBloqueado, getHorariosBloqueados } from "./hooks/useBlockedDates";
 import { SERVICES, PACOTES, WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
 import "./styles.css";
+import { sendConfirmationEmail } from "./sendConfirmationEmail";
 
 const DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 
@@ -40,80 +41,64 @@ export default function Checkout({ user, item, onClose }) {
     setStep("resumo");
   }
 
-  async function iniciarCompra() {
-    setStep("loading");
-    try {
-      const referenciaId = `${user.uid}_${Date.now()}`;
+  // Em Checkout.jsx, troque a função iniciarCompra por isso:
+async function iniciarCompra() {
+  setStep("loading");
+  try {
+    const referenciaId = `${user.uid}_${Date.now()}`;
 
-      if (isPacote) {
-        // 1. Cria o doc do pacote do cliente (pendente até pagamento aprovar)
-        await setDoc(doc(db, "pacotesClientes", referenciaId), {
-          clienteId: user.uid,
-          nome: user.displayName,
-          email: user.email,
-          pacoteId: item.id,
-          sessoesRestantes: 0, // liberado pelo webhook quando pagamento aprovar
-          status: "pendente",
-          criadoEm: serverTimestamp(),
-        });
+    // 1. Cria o doc do pacote do cliente
+    await setDoc(doc(db, "pacotesClientes", referenciaId), {
+      clienteId: user.uid,
+      nome: user.displayName,
+      email: user.email,
+      pacoteId: item.id,
+      sessoesRestantes: item.qtdSessoes,
+      status: "ativo", // não depende mais de webhook de pagamento
+      pagamentoLocal: true,
+      criadoEm: serverTimestamp(),
+    });
 
-        // 2. Cria os N agendamentos já vinculados ao pacote, reservando os horários
-        for (const sessao of sessoesEscolhidas) {
-          await setDoc(doc(db, "agendamentos", `${referenciaId}_s${sessoesEscolhidas.indexOf(sessao)}`), {
-            usuarioId: user.uid,
-            nome: user.displayName || "",
-            email: user.email || "",
-            telefone: "",
-            servicoId: servicoDoPacote.id,
-            servicoNome: servicoDoPacote.name,
-            profissional: servicoDoPacote.professional,
-            preco: null,
-            pacoteClienteId: referenciaId,
-            dataKey: sessao.dataKey,
-            dataLabel: sessao.dataLabel,
-            horario: sessao.horario,
-            status: "pendente",
-            criadoEm: serverTimestamp(),
-          });
-        }
-      } else {
-        await setDoc(doc(db, "pagamentos", referenciaId), {
-          clienteId: user.uid,
-          nome: user.displayName,
-          email: user.email,
-          servicoId: item.id,
-          servicoNome: item.nome,
-          status: "pendente",
-          criadoEm: serverTimestamp(),
-        });
-      }
-
-      // Chama a Vercel Function que cria a preferência no Mercado Pago
-      const res = await fetch("/api/create-payment", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          title: item.nome,
-          price: item.valor,
-          referenciaId,
-          tipo: item.tipo,
-          itemId: item.id,
-          clienteEmail: user.email,
-        }),
+    // 2. Cria as N sessões já vinculadas ao pacote (status pendente até confirmar presença)
+    for (let i = 0; i < sessoesEscolhidas.length; i++) {
+      const sessao = sessoesEscolhidas[i];
+      await setDoc(doc(db, "agendamentos", `${referenciaId}_s${i}`), {
+        usuarioId: user.uid,
+        nome: user.displayName || "",
+        email: user.email || "",
+        telefone: "",
+        servicoId: servicoDoPacote.id,
+        servicoNome: servicoDoPacote.name,
+        profissional: servicoDoPacote.professional,
+        preco: null,
+        pacoteClienteId: referenciaId,
+        pacoteNome: item.nome,           // usado na notificação
+        ehPacote: true,                  // flag pra identificar na notificação
+        sessaoNumero: i + 1,
+        totalSessoes: item.qtdSessoes,
+        dataKey: sessao.dataKey,
+        dataLabel: sessao.dataLabel,
+        horario: sessao.horario,
+        status: "pendente",
+        criadoEm: serverTimestamp(),
       });
-
-      const data = await res.json();
-
-      if (data.init_point) {
-        window.location.href = data.init_point;
-      } else {
-        setStep("error");
-      }
-    } catch (err) {
-      console.error(err);
-      setStep("error");
     }
+        sendConfirmationEmail({
+  nome: user.displayName,
+  email: user.email,
+  telefone: "",
+  servico: `Pacote Mensal (${item.qtdSessoes} sessões de ${servicoDoPacote.name})`,
+  data: sessoesEscolhidas[0].dataLabel,
+  horario: sessoesEscolhidas[0].horario,
+});
+
+    setStep("concluido"); // novo step de sucesso, sem redirecionar a lugar nenhum
+  } catch (err) {
+    console.error(err);
+    setStep("error");
   }
+}
+
 
   return (
     <div className="modalOverlay" onClick={onClose}>
@@ -160,14 +145,13 @@ export default function Checkout({ user, item, onClose }) {
             )}
 
             <p className="pMutedSmall" style={{ marginTop: 10 }}>
-              Você será redirecionado ao Mercado Pago para escolher Pix, Crédito ou Débito.
-            </p>
-            <button className="primaryBtn" style={{ width: "100%", marginTop: 16 }} onClick={iniciarCompra}>
-              <CreditCard size={16} style={{ marginRight: 6, verticalAlign: -2 }} />
-              Ir para pagamento
-            </button>
-            <button className="backLink" onClick={onClose}>Fechar</button>
-          </>
+  O pagamento das {item.qtdSessoes} sessões será feito presencialmente, no dia da primeira sessão.
+</p>
+<button className="primaryBtn" style={{ width: "100%", marginTop: 16 }} onClick={iniciarCompra}>
+  Confirmar contratação do pacote
+</button>
+<button className="backLink" onClick={onClose}>Fechar</button>
+            </>
         )}
 
         {step === "loading" && <p className="pMutedSmall">Gerando pagamento...</p>}
