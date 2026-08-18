@@ -2,7 +2,7 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock,
   Download, X, LogIn, LogOut, CalendarDays, Star, Instagram, MapPin, Phone,
-  Info, Package, CreditCard, ListChecks,
+  Info, Package, CreditCard, ListChecks, Share2,
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
 import { useCreateBooking, useOccupiedSlots } from "./hooks/useBooking";
@@ -150,6 +150,35 @@ export default function App() {
   );
 }
 
+function ShareCard() {
+  async function handleShare() {
+    const shareData = {
+      title: "Carol Sampaio - Bronzeamento",
+      text: "Agende seu bronzeamento com a Carol Sampaio, direto pelo app!",
+      url: window.location.href,
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        // usuário cancelou o compartilhamento, ignora
+      }
+    } else {
+      // fallback: copia o link
+      await navigator.clipboard.writeText(shareData.url);
+      alert("Link copiado! Cole onde quiser compartilhar.");
+    }
+  }
+
+  return (
+    <button className="shareCard" onClick={handleShare}>
+      <Share2 size={16} />
+      Compartilhar
+    </button>
+  );
+}
+
 function TabBar({ activeTab, onChange, loggedIn }) {
   return (
     <div className="tabBar">
@@ -173,6 +202,11 @@ function TabBar({ activeTab, onChange, loggedIn }) {
     </div>
   );
 }
+
+<button className="navItem navItemShare" onClick={handleShare}>
+  <Share2 size={18} />
+  <span>Compartilhar</span>
+</button>
 
 function InstallBanner({ onInstall, onDismiss }) {
   return (
