@@ -163,11 +163,8 @@ function ShareCard() {
     if (navigator.share) {
       try {
         await navigator.share(shareData);
-      } catch (err) {
-        // usuário cancelou o compartilhamento, ignora
-      }
+      } catch (err) {}
     } else {
-      // fallback: copia o link
       await navigator.clipboard.writeText(shareData.url);
       alert("Link copiado! Cole onde quiser compartilhar.");
     }
@@ -175,11 +172,12 @@ function ShareCard() {
 
   return (
     <button className="shareCard" onClick={handleShare}>
-      <Share2 size={16} />
+      <Download size={14} />
       Compartilhar
     </button>
   );
 }
+
 
 function TabBar({ activeTab, onChange, loggedIn }) {
   return (
@@ -201,6 +199,7 @@ function TabBar({ activeTab, onChange, loggedIn }) {
           </button>
         );
       })}
+      <ShareCard />
     </div>
   );
 }

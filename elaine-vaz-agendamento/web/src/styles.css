@@ -493,3 +493,36 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   94% { transform: translateX(-1px); }
   96% { transform: translateX(1px); }
 }
+.shareCard {
+  position: absolute;
+  top: -6px; /* sobe um pouco acima da barra */
+  right: 8px; /* alinha à direita, cobrindo a região de Rede Social/Localização */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  background: linear-gradient(135deg, #E8CE85, #C9A24B);
+  color: #0B0A09;
+  font-weight: 700;
+  font-size: 13px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.35);
+  z-index: 999;
+  animation: vibrate 3s ease-in-out infinite;
+}
+
+.shareCard svg {
+  color: #0B0A09;
+}
+
+@keyframes vibrate {
+  0%, 85%, 100% { transform: translateX(0); }
+  86% { transform: translateX(-2px) rotate(-1deg); }
+  88% { transform: translateX(2px) rotate(1deg); }
+  90% { transform: translateX(-2px) rotate(-1deg); }
+  92% { transform: translateX(2px) rotate(1deg); }
+  94% { transform: translateX(-1px); }
+  96% { transform: translateX(1px); }
+}
