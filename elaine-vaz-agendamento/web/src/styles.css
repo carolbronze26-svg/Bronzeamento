@@ -484,15 +484,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   animation: vibrate 3s ease-in-out infinite;
 }
 
-@keyframes vibrate {
-  0%, 85%, 100% { transform: translateX(0); }
-  86% { transform: translateX(-2px) rotate(-1deg); }
-  88% { transform: translateX(2px) rotate(1deg); }
-  90% { transform: translateX(-2px) rotate(-1deg); }
-  92% { transform: translateX(2px) rotate(1deg); }
-  94% { transform: translateX(-1px); }
-  96% { transform: translateX(1px); }
-}
 .topSection {
   position: relative;
 }
