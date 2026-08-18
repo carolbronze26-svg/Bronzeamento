@@ -4,7 +4,11 @@ service cloud.firestore {
 
     function isAdmin() {
       return request.auth != null
-             && request.auth.token.email in ['carol.bronze26@gmail.com','Nicknicole10@hotmail.com'];
+             && request.auth.token.email in [
+               'carol.bronze26@gmail.com',
+               'nicknicole10.ns@gmail.com',
+               'sampaiocfs@gmail.com'
+             ];
     }
 
     // Cada cliente só pode ler/editar o próprio perfil; admin lê todos
