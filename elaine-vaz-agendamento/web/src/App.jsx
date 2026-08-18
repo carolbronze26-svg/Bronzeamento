@@ -126,25 +126,27 @@ export default function App() {
         <TabBar activeTab={activeTab} onChange={setActiveTab} loggedIn={!!user} />
 
         <div className="body">
-  {activeTab === "entrar" && (
-    <EntrarTab user={user} onLogin={login} onLogout={logout} authError={authError} />
-  )}
-  {activeTab === "agendamento" && (
-    <AgendamentoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} />
-  )}
-  {activeTab === "meus" && (
-    user ? (
-      <MeusAgendamentos user={user} />
-    ) : (
-      <div className="stepCenter">
-        <p className="pMuted">Faça login para ver seus agendamentos.</p>
-      </div>
-    )
-  )}
-  {activeTab === "avaliacao" && <AvaliacaoTab />}
-  {activeTab === "social" && <SocialTab />}
-  {activeTab === "localizacao" && <LocalizacaoTab />}
-</div>
+          {activeTab === "entrar" && (
+            <EntrarTab user={user} onLogin={login} onLogout={logout} authError={authError} />
+          )}
+          {activeTab === "agendamento" && (
+            <AgendamentoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} />
+          )}
+          {activeTab === "meus" && (
+            user ? (
+              <MeusAgendamentos user={user} />
+            ) : (
+              <div className="stepCenter">
+                <p className="pMuted">Faça login para ver seus agendamentos.</p>
+              </div>
+            )
+          )}
+          {activeTab === "avaliacao" && <AvaliacaoTab />}
+          {activeTab === "social" && <SocialTab />}
+          {activeTab === "localizacao" && <LocalizacaoTab />}
+        </div>
+
+        <ShareCard />
       </div>
     </div>
   );
@@ -202,11 +204,6 @@ function TabBar({ activeTab, onChange, loggedIn }) {
     </div>
   );
 }
-
-<button className="navItem navItemShare" onClick={handleShare}>
-  <Share2 size={18} />
-  <span>Compartilhar</span>
-</button>
 
 function InstallBanner({ onInstall, onDismiss }) {
   return (
