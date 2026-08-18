@@ -115,15 +115,19 @@ export default function App() {
         {canInstall && !dismissedInstall && (
           <InstallBanner onInstall={promptInstall} onDismiss={() => setDismissedInstall(true)} />
         )}
-        <div className="brandRow" style={{ padding: "20px 22px 0" }}>
-          <div className="monogram">CS</div>
-          <div>
-            <div className="brandName">Carol Sampaio</div>
-            <div className="brandSub">Muito mais que um bronze perfeito, é cuidado, bem-estar e autoestima todos os dias</div>
-          </div>
-        </div>
+        <div className="topSection">
+  <div className="brandRow" style={{ padding: "20px 22px 0" }}>
+    <div className="monogram">CS</div>
+    <div>
+      <div className="brandName">Carol Sampaio</div>
+      <div className="brandSub">Muito mais que um bronze perfeito, é cuidado, bem-estar e autoestima todos os dias</div>
+    </div>
+  </div>
 
-        <TabBar activeTab={activeTab} onChange={setActiveTab} loggedIn={!!user} />
+  <ShareCard />
+
+  <TabBar activeTab={activeTab} onChange={setActiveTab} loggedIn={!!user} />
+</div>
 
         <div className="body">
           {activeTab === "entrar" && (
