@@ -116,18 +116,18 @@ export default function App() {
           <InstallBanner onInstall={promptInstall} onDismiss={() => setDismissedInstall(true)} />
         )}
         <div className="topSection">
-  <div className="brandRow" style={{ padding: "20px 22px 0" }}>
-    <div className="monogram">CS</div>
-    <div>
-      <div className="brandName">Carol Sampaio</div>
-      <div className="brandSub">Muito mais que um bronze perfeito, é cuidado, bem-estar e autoestima todos os dias</div>
-    </div>
-  </div>
+          <div className="brandRow" style={{ padding: "20px 22px 0" }}>
+            <div className="monogram">CS</div>
+            <div>
+              <div className="brandName">Carol Sampaio</div>
+              <div className="brandSub">Muito mais que um bronze perfeito, é cuidado, bem-estar e autoestima todos os dias</div>
+            </div>
+          </div>
 
-  <ShareCard />
+          <ShareCard />
 
-  <TabBar activeTab={activeTab} onChange={setActiveTab} loggedIn={!!user} />
-</div>
+          <TabBar activeTab={activeTab} onChange={setActiveTab} loggedIn={!!user} />
+        </div>
 
         <div className="body">
           {activeTab === "entrar" && (
@@ -149,8 +149,6 @@ export default function App() {
           {activeTab === "social" && <SocialTab />}
           {activeTab === "localizacao" && <LocalizacaoTab />}
         </div>
-
-        <ShareCard />
       </div>
     </div>
   );
@@ -203,7 +201,6 @@ function TabBar({ activeTab, onChange, loggedIn }) {
           </button>
         );
       })}
-      <ShareCard />
     </div>
   );
 }
