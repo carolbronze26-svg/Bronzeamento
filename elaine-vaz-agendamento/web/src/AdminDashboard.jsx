@@ -24,8 +24,16 @@ const ADMIN_TABS = [
 
 const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
-function noPeriodo(dataKey, periodo) {
-  if (periodo === "tudo" || !dataKey) return true;
+function noPeriodo(dataKey, periodo, customStart, customEnd) {
+  if (!dataKey) return periodo === "tudo";
+
+  if (periodo === "custom") {
+    if (!customStart || !customEnd) return true;
+    return dataKey >= customStart && dataKey <= customEnd;
+  }
+
+  if (periodo === "tudo") return true;
+
   const hoje = new Date();
   const [ano, mes, dia] = dataKey.split("-").map(Number);
   const data = new Date(ano, mes - 1, dia);
@@ -212,11 +220,13 @@ export default function AdminDashboard() {
   // Relatório
   // ------------------------------------------------------------------
   const [periodoRelatorio, setPeriodoRelatorio] = useState("mes");
+  const [customStart, setCustomStart] = useState("");
+  const [customEnd, setCustomEnd] = useState("");
 
   const naoCancelados = useMemo(() => agendamentos.filter((a) => a.status !== "cancelado"), [agendamentos]);
   const noPeriodoAtual = useMemo(
-    () => naoCancelados.filter((a) => noPeriodo(a.dataKey, periodoRelatorio)),
-    [naoCancelados, periodoRelatorio]
+    () => naoCancelados.filter((a) => noPeriodo(a.dataKey, periodoRelatorio, customStart, customEnd)),
+    [naoCancelados, periodoRelatorio, customStart, customEnd]
   );
 
   const faturamentoTotal = useMemo(
@@ -253,11 +263,11 @@ export default function AdminDashboard() {
   }, [noPeriodoAtual]);
 
   const taxaCancelamento = useMemo(() => {
-    const totalPeriodo = agendamentos.filter((a) => noPeriodo(a.dataKey, periodoRelatorio));
+    const totalPeriodo = agendamentos.filter((a) => noPeriodo(a.dataKey, periodoRelatorio, customStart, customEnd));
     if (totalPeriodo.length === 0) return 0;
     const cancelados = totalPeriodo.filter((a) => a.status === "cancelado").length;
     return Math.round((cancelados / totalPeriodo.length) * 100);
-  }, [agendamentos, periodoRelatorio]);
+  }, [agendamentos, periodoRelatorio, customStart, customEnd]);
 
   const taxaComparecimento = useMemo(() => {
     if (noPeriodoAtual.length === 0) return 0;
@@ -589,6 +599,7 @@ export default function AdminDashboard() {
                 { id: "mes", label: "Este mês" },
                 { id: "30dias", label: "Últimos 30 dias" },
                 { id: "tudo", label: "Tudo" },
+                { id: "custom", label: "Personalizado" },
               ].map((p) => (
                 <button
                   key={p.id}
@@ -600,6 +611,30 @@ export default function AdminDashboard() {
                 </button>
               ))}
             </div>
+
+            {periodoRelatorio === "custom" && (
+              <div className="reportDateRange">
+                <div className="reportDateField">
+                  <label className="reportDateLabel">De</label>
+                  <input
+                    type="date"
+                    className="reportDateInput"
+                    value={customStart}
+                    onChange={(e) => setCustomStart(e.target.value)}
+                  />
+                </div>
+                <span className="reportDateSeparator">até</span>
+                <div className="reportDateField">
+                  <label className="reportDateLabel">Até</label>
+                  <input
+                    type="date"
+                    className="reportDateInput"
+                    value={customEnd}
+                    onChange={(e) => setCustomEnd(e.target.value)}
+                  />
+                </div>
+              </div>
+            )}
 
             <div className="reportCard">
               <div className="reportCardTitle">Faturamento</div>
