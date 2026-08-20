@@ -18,3 +18,17 @@ export function buildWhatsappConfirmationLink(booking) {
 
   return `https://wa.me/${CAROL_WHATSAPP}?text=${encodeURIComponent(text)}`;
 }
+
+/**
+ * Monta o link wa.me pra confirmação de um pacote com várias sessões.
+ * @param {{ sessoes: {dateLabel:string, horario:string}[], clientName: string }} booking
+ */
+export function buildWhatsappPacoteLink({ sessoes, clientName }) {
+  const linhas = sessoes.map((s, i) => `  ${i + 1}) ${s.dateLabel} às ${s.horario}`).join("\n");
+  const text =
+    `Olá! Gostaria de confirmar meu pacote de 4 sessões de bronzeamento:\n` +
+    `${linhas}\n` +
+    `• Nome: ${clientName || ""}`;
+
+  return `https://wa.me/${CAROL_WHATSAPP}?text=${encodeURIComponent(text)}`;
+}

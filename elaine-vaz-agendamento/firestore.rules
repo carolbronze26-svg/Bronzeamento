@@ -2,9 +2,13 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isAdmin() {
+   function isAdmin() {
       return request.auth != null
-             && request.auth.token.email in ['carol.bronze26@gmail.com','Nicknicole10@hotmail.com'];
+             && request.auth.token.email in [
+               'carol.bronze26@gmail.com',
+               'nicknicole10.ns@gmail.com',
+               'sampaiocfs@gmail.com'
+             ];
     }
 
     // Cada cliente só pode ler/editar o próprio perfil; admin lê todos
@@ -19,13 +23,24 @@ service cloud.firestore {
       allow write: if false; // gerenciado manualmente pelo Firebase Console
     }
 
-    // Agendamentos: cliente cria/lê os seus; admin lê e atualiza todos (status)
+    // Agendamentos: cliente cria/lê os seus; admin lê e atualiza todos.
+    // Cliente também pode atualizar o PRÓPRIO agendamento, mas só pra
+    // cancelar, confirmar presença ou reagendar — nunca marcar como
+    // "confirmado" (isso é reservado ao admin, que usa esse status pra
+    // dizer que o atendimento foi concluído de verdade).
     match /agendamentos/{agendamentoId} {
       allow create: if request.auth != null
                     && request.resource.data.usuarioId == request.auth.uid;
       allow read: if request.auth != null
                     && (resource.data.usuarioId == request.auth.uid || isAdmin());
-      allow update: if isAdmin();
+      allow update: if isAdmin() || (
+                    request.auth != null
+                    && resource.data.usuarioId == request.auth.uid
+                    && resource.data.status != 'confirmado'
+                    && request.resource.data.diff(resource.data).affectedKeys()
+                         .hasOnly(['status', 'dataKey', 'dataLabel', 'horario'])
+                    && request.resource.data.status in ['pendente', 'cancelado', 'presenca_confirmada']
+                  );
       allow delete: if isAdmin() && resource.data.status == 'cancelado';
     }
 
