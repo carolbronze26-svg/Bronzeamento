@@ -302,6 +302,21 @@ export default function AdminDashboard() {
     return Object.entries(mapa).sort((a, b) => b[1] - a[1]);
   }, [noPeriodoAtual]);
 
+  // Ranking de serviços mais vendidos (por quantidade, não faturamento)
+  const servicosMaisVendidos = useMemo(() => {
+    const contagem = {};
+    noPeriodoAtual.forEach((a) => {
+      const nome = a.servicoNome || "Outro";
+      if (!contagem[nome]) {
+        contagem[nome] = { qtd: 0, isPacote: a.servicoId === "pacote" };
+      }
+      contagem[nome].qtd += 1;
+    });
+    return Object.entries(contagem)
+      .sort((a, b) => b[1].qtd - a[1].qtd)
+      .map(([nome, info]) => ({ nome, qtd: info.qtd, isPacote: info.isPacote }));
+  }, [noPeriodoAtual]);
+
   const atendimentosPorDiaSemana = useMemo(() => {
     const contagem = [0, 0, 0, 0, 0, 0, 0];
     noPeriodoAtual.forEach((a) => {
@@ -732,6 +747,27 @@ export default function AdminDashboard() {
             </div>
 
             <div className="reportCard">
+              <div className="reportCardTitle">Serviços mais vendidos</div>
+              {servicosMaisVendidos.length === 0 ? (
+                <p className="pMutedSmall">Sem dados nesse período.</p>
+              ) : (
+                <div className="topServicesList">
+                  {servicosMaisVendidos.map((s, i) => (
+                    <div key={s.nome} className="topServiceRow">
+                      <div className="topServiceLeft">
+                        <span className="topServiceRank">{i + 1}º</span>
+                        <span className="topServiceName">{s.nome}</span>
+                      </div>
+                      <span className="topServiceCount">
+                        {s.qtd} {formatUnidade(s.qtd, s.isPacote)}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="reportCard">
               <div className="reportCardTitle">Faturamento por serviço</div>
               <p className="pMutedSmall" style={{ marginBottom: 10 }}>Somente atendimentos concluídos</p>
               {faturamentoPorServico.map(([nome, valor]) => (
@@ -797,6 +833,11 @@ export default function AdminDashboard() {
       </div>
     </div>
   );
+}
+
+function formatUnidade(qtd, isPacote) {
+  if (isPacote) return qtd > 1 ? "pacotes" : "pacote";
+  return qtd > 1 ? "sessões" : "sessão";
 }
 
 function ReportStatCard({ title, value, delta }) {

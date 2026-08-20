@@ -463,3 +463,40 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 }
 .reportStatCardDelta.positive { color: #6FCF97; }
 .reportStatCardDelta.negative { color: #E07856; }
+/* Ranking de serviços mais vendidos */
+.topServicesList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.topServiceRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1A1510;
+  border: 1px solid #221D14;
+  border-radius: 10px;
+  padding: 10px 14px;
+}
+.topServiceLeft {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.topServiceRank {
+  color: #E8CE85;
+  font-size: 12.5px;
+  font-weight: 700;
+  min-width: 16px;
+}
+.topServiceName {
+  color: #F3ECDD;
+  font-size: 12.5px;
+  font-weight: 600;
+}
+.topServiceCount {
+  color: #C9A24B;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
