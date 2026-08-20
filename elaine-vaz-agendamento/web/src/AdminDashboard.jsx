@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, deleteDoc, serverTimestamp } from "firebase/firestore";
 import {
   Chrome, Clock, CheckCircle2, XCircle, Phone, Mail, Calendar,
-  Search, Star, TrendingUp, Users, MessageCircle, CalendarOff, Trash2, Activity, Bell,
+  Search, Star, TrendingUp, Users, MessageCircle, CalendarOff, Trash2, Activity, Bell, BarChart3,
 } from "lucide-react";
 import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS, formatPreco } from "../../shared/services";
 import { useAuth } from "./hooks/useAuth";
@@ -19,7 +19,25 @@ const ADMIN_TABS = [
   { id: "cancelamento", label: "Cancelamento", icon: XCircle },
   { id: "bloqueio", label: "Bloquear data", icon: CalendarOff },
   { id: "avaliacao", label: "Avaliação", icon: Star },
+  { id: "relatorio", label: "Relatório", icon: BarChart3 },
 ];
+
+const DIAS_SEMANA = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+
+function noPeriodo(dataKey, periodo) {
+  if (periodo === "tudo" || !dataKey) return true;
+  const hoje = new Date();
+  const [ano, mes, dia] = dataKey.split("-").map(Number);
+  const data = new Date(ano, mes - 1, dia);
+  if (periodo === "mes") {
+    return data.getFullYear() === hoje.getFullYear() && data.getMonth() === hoje.getMonth();
+  }
+  if (periodo === "30dias") {
+    const diffDias = (hoje - data) / (1000 * 60 * 60 * 24);
+    return diffDias >= 0 && diffDias <= 30;
+  }
+  return true;
+}
 
 export default function AdminDashboard() {
   const { user, loading, login } = useAuth();
@@ -149,6 +167,8 @@ export default function AdminDashboard() {
     () => Object.values(contagemPorCliente).filter((n) => n > 1).length,
     [contagemPorCliente]
   );
+  const totalClientesUnicos = useMemo(() => Object.keys(contagemPorCliente).length, [contagemPorCliente]);
+  const clientesNovos = totalClientesUnicos - clientesRecorrentes;
 
   // Lembrete de manutenção: 15 dias após a 1ª sessão concluída,
   // depois a cada 30 dias contados a partir da última sessão.
@@ -186,6 +206,91 @@ export default function AdminDashboard() {
     const notas = Object.values(avaliacoes).map((v) => v.nota).filter((n) => typeof n === "number");
     if (notas.length === 0) return null;
     return (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(1);
+  }, [avaliacoes]);
+
+  // ------------------------------------------------------------------
+  // Relatório
+  // ------------------------------------------------------------------
+  const [periodoRelatorio, setPeriodoRelatorio] = useState("mes");
+
+  const naoCancelados = useMemo(() => agendamentos.filter((a) => a.status !== "cancelado"), [agendamentos]);
+  const noPeriodoAtual = useMemo(
+    () => naoCancelados.filter((a) => noPeriodo(a.dataKey, periodoRelatorio)),
+    [naoCancelados, periodoRelatorio]
+  );
+
+  const faturamentoTotal = useMemo(
+    () => noPeriodoAtual.filter((a) => a.status === "confirmado").reduce((soma, a) => soma + (a.preco || 0), 0),
+    [noPeriodoAtual]
+  );
+
+  const faturamentoPorServico = useMemo(() => {
+    const mapa = {};
+    noPeriodoAtual.filter((a) => a.status === "confirmado").forEach((a) => {
+      const nome = a.servicoNome || "Outro";
+      mapa[nome] = (mapa[nome] || 0) + (a.preco || 0);
+    });
+    return Object.entries(mapa).sort((a, b) => b[1] - a[1]);
+  }, [noPeriodoAtual]);
+
+  const atendimentosPorDiaSemana = useMemo(() => {
+    const contagem = [0, 0, 0, 0, 0, 0, 0];
+    noPeriodoAtual.forEach((a) => {
+      if (!a.dataKey) return;
+      const [ano, mes, dia] = a.dataKey.split("-").map(Number);
+      contagem[new Date(ano, mes - 1, dia).getDay()]++;
+    });
+    return DIAS_SEMANA.map((label, i) => ({ label, valor: contagem[i] }));
+  }, [noPeriodoAtual]);
+
+  const atendimentosPorHorario = useMemo(() => {
+    const mapa = {};
+    noPeriodoAtual.forEach((a) => {
+      if (!a.horario) return;
+      mapa[a.horario] = (mapa[a.horario] || 0) + 1;
+    });
+    return Object.entries(mapa).sort((a, b) => a[0].localeCompare(b[0])).map(([label, valor]) => ({ label, valor }));
+  }, [noPeriodoAtual]);
+
+  const taxaCancelamento = useMemo(() => {
+    const totalPeriodo = agendamentos.filter((a) => noPeriodo(a.dataKey, periodoRelatorio));
+    if (totalPeriodo.length === 0) return 0;
+    const cancelados = totalPeriodo.filter((a) => a.status === "cancelado").length;
+    return Math.round((cancelados / totalPeriodo.length) * 100);
+  }, [agendamentos, periodoRelatorio]);
+
+  const taxaComparecimento = useMemo(() => {
+    if (noPeriodoAtual.length === 0) return 0;
+    const compareceram = noPeriodoAtual.filter((a) => a.status === "confirmado" || a.status === "presenca_confirmada").length;
+    return Math.round((compareceram / noPeriodoAtual.length) * 100);
+  }, [noPeriodoAtual]);
+
+  const taxaRetornoManutencao = useMemo(() => {
+    const porCliente = {};
+    agendamentos.filter((a) => a.status !== "cancelado").forEach((a) => {
+      const key = clientKey(a);
+      if (!key) return;
+      if (!porCliente[key]) porCliente[key] = new Set();
+      porCliente[key].add(a.servicoId);
+    });
+    const comSessao = Object.values(porCliente).filter((s) => s.has("sessao"));
+    if (comSessao.length === 0) return 0;
+    const comManutencao = comSessao.filter((s) => s.has("manutencao"));
+    return { taxa: Math.round((comManutencao.length / comSessao.length) * 100), total: comSessao.length, retornaram: comManutencao.length };
+  }, [agendamentos]);
+
+  const notaMediaEsteMes = useMemo(() => {
+    const hoje = new Date();
+    const notas = Object.values(avaliacoes)
+      .filter((v) => {
+        if (!v.criadoEm?.seconds) return false;
+        const d = new Date(v.criadoEm.seconds * 1000);
+        return d.getFullYear() === hoje.getFullYear() && d.getMonth() === hoje.getMonth();
+      })
+      .map((v) => v.nota)
+      .filter((n) => typeof n === "number");
+    if (notas.length === 0) return null;
+    return { media: (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(1), total: notas.length };
   }, [avaliacoes]);
 
   const filtrados = useMemo(() => {
@@ -476,6 +581,116 @@ export default function AdminDashboard() {
             )}
           </div>
         )}
+
+        {activeTab === "relatorio" && (
+          <div className="adminSection">
+            <div className="reportPeriodTabs">
+              {[
+                { id: "mes", label: "Este mês" },
+                { id: "30dias", label: "Últimos 30 dias" },
+                { id: "tudo", label: "Tudo" },
+              ].map((p) => (
+                <button
+                  key={p.id}
+                  className="reportPeriodBtn"
+                  style={{ background: periodoRelatorio === p.id ? "#C9A24B" : "transparent", color: periodoRelatorio === p.id ? "#0B0A09" : "#9C9384" }}
+                  onClick={() => setPeriodoRelatorio(p.id)}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="reportCard">
+              <div className="reportCardTitle">Faturamento</div>
+              <div className="reportBigNumber">{formatPreco(faturamentoTotal)}</div>
+              <p className="pMutedSmall" style={{ marginBottom: 10 }}>Somente atendimentos concluídos</p>
+              {faturamentoPorServico.map(([nome, valor]) => (
+                <BarRow key={nome} label={nome} value={valor} max={faturamentoTotal || 1} formatValue={formatPreco} />
+              ))}
+            </div>
+
+            <div className="reportCard">
+              <div className="reportCardTitle">Atendimentos por dia da semana</div>
+              {atendimentosPorDiaSemana.map((d) => (
+                <BarRow key={d.label} label={d.label} value={d.valor} max={Math.max(...atendimentosPorDiaSemana.map((x) => x.valor), 1)} />
+              ))}
+            </div>
+
+            <div className="reportCard">
+              <div className="reportCardTitle">Horários mais pedidos</div>
+              {atendimentosPorHorario.length === 0 ? (
+                <p className="pMutedSmall">Sem dados nesse período.</p>
+              ) : (
+                atendimentosPorHorario.map((h) => (
+                  <BarRow key={h.label} label={h.label} value={h.valor} max={Math.max(...atendimentosPorHorario.map((x) => x.valor), 1)} />
+                ))
+              )}
+            </div>
+
+            <div className="reportStatsRow">
+              <div className="reportStatBox">
+                <span className="reportStatNumber" style={{ color: "#E07856" }}>{taxaCancelamento}%</span>
+                <span className="adminStatLabel">Cancelamento</span>
+              </div>
+              <div className="reportStatBox">
+                <span className="reportStatNumber" style={{ color: "#6FCF97" }}>{taxaComparecimento}%</span>
+                <span className="adminStatLabel">Comparecimento</span>
+              </div>
+            </div>
+
+            <div className="reportStatsRow">
+              <div className="reportStatBox">
+                <span className="reportStatNumber">{clientesNovos}</span>
+                <span className="adminStatLabel">Clientes novos</span>
+              </div>
+              <div className="reportStatBox">
+                <span className="reportStatNumber">{clientesRecorrentes}</span>
+                <span className="adminStatLabel">Recorrentes</span>
+              </div>
+            </div>
+
+            <div className="reportCard">
+              <div className="reportCardTitle">Retorno pra manutenção</div>
+              {taxaRetornoManutencao.total > 0 ? (
+                <>
+                  <div className="reportBigNumber">{taxaRetornoManutencao.taxa}%</div>
+                  <p className="pMutedSmall">
+                    {taxaRetornoManutencao.retornaram} de {taxaRetornoManutencao.total} clientes que fizeram o Bronzeamento voltaram pra Manutenção
+                  </p>
+                </>
+              ) : (
+                <p className="pMutedSmall">Sem dados suficientes ainda.</p>
+              )}
+            </div>
+
+            <div className="reportStatsRow">
+              <div className="reportStatBox">
+                <span className="reportStatNumber">{notaMediaEsteMes ? notaMediaEsteMes.media : "—"}</span>
+                <span className="adminStatLabel">Nota este mês {notaMediaEsteMes ? `(${notaMediaEsteMes.total})` : ""}</span>
+              </div>
+              <div className="reportStatBox">
+                <span className="reportStatNumber">{mediaAvaliacao || "—"}</span>
+                <span className="adminStatLabel">Nota geral</span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function BarRow({ label, value, max, formatValue }) {
+  const pct = Math.max(4, Math.round((value / max) * 100));
+  return (
+    <div className="barRow">
+      <div className="barRowTop">
+        <span className="barRowLabel">{label}</span>
+        <span className="barRowValue">{formatValue ? formatValue(value) : value}</span>
+      </div>
+      <div className="barRowTrack">
+        <div className="barRowFill" style={{ width: `${pct}%` }} />
       </div>
     </div>
   );

@@ -363,3 +363,25 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 }
 .bookingCardActions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
 .rescheduleBox { border-top: 1px solid #221D14; margin-top: 12px; padding-top: 10px; }
+
+/* Relatório */
+.reportPeriodTabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.reportPeriodBtn {
+  border: 1.5px solid #2A241A; border-radius: 20px; padding: 7px 14px; font-size: 11.5px;
+  font-weight: 600; cursor: pointer; font-family: 'Manrope', sans-serif;
+}
+.reportCard { background: #131009; border: 1px solid #221D14; border-radius: 14px; padding: 16px 18px; margin-bottom: 12px; }
+.reportCardTitle { color: #C9A24B; font-size: 12.5px; font-weight: 700; margin-bottom: 8px; }
+.reportBigNumber { color: #E8CE85; font-size: 26px; font-weight: 700; font-family: 'Cormorant Garamond', serif; margin-bottom: 2px; }
+.reportStatsRow { display: flex; gap: 10px; margin-bottom: 12px; }
+.reportStatBox {
+  flex: 1; background: #131009; border: 1px solid #221D14; border-radius: 14px;
+  padding: 14px; text-align: center;
+}
+.reportStatNumber { display: block; color: #E8CE85; font-size: 22px; font-weight: 700; font-family: 'Cormorant Garamond', serif; margin-bottom: 2px; }
+.barRow { margin-bottom: 10px; }
+.barRowTop { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.barRowLabel { color: #D8CBB0; font-size: 11.5px; }
+.barRowValue { color: #9C9384; font-size: 11px; }
+.barRowTrack { height: 6px; background: #221D14; border-radius: 4px; overflow: hidden; }
+.barRowFill { height: 100%; background: linear-gradient(90deg,#B8642F,#E8CE85); border-radius: 4px; }
