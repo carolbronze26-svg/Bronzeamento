@@ -378,100 +378,10 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   flex: 1; background: #131009; border: 1px solid #221D14; border-radius: 14px;
   padding: 14px; text-align: center;
 }
-.reportStatNumber {
-  display: block;
-  color: #E8CE85;
-  font-size: 20px;
-  font-weight: 700;
-  font-family: 'Cormorant Garamond', serif;
-}
-.reportStatLabel {
-  display: block;
-  color: #8A8272;
-  font-size: 10.5px;
-  margin-top: 2px;
-}
-
-.weekBarChart {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  gap: 8px;
-  height: 100px;
-  padding-top: 6px;
-}
-.weekBarCol {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  height: 100%;
-  justify-content: flex-end;
-}
-.weekBarTrack {
-  width: 100%;
-  height: 80px;
-  display: flex;
-  align-items: flex-end;
-}
-.weekBarFill {
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(180deg, #E8CE85, #B8862F);
-  border-radius: 6px 6px 0 0;
-}
-.weekBarLabel {
-  font-size: 10px;
-  color: #8A8272;
-}
-
-.rankRow {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #151109;
-  border: 1px solid #221D14;
-  border-radius: 10px;
-  padding: 10px;
-  margin-bottom: 6px;
-}
-.rankRowLabel {
-  font-size: 12px;
-  font-weight: 700;
-  color: #F3ECDD;
-}
-.rankRowValue {
-  font-size: 11px;
-  color: #8A8272;
-}
-
-.clientsRow {
-  display: flex;
-  justify-content: space-around;
-  width: 100%;
-  margin-top: 10px;
-}
-.clientsCol {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  font-size: 11px;
-}
-
-.satisfactionRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.satisfactionStars {
-  font-size: 15px;
-  color: #E8CE85;
-}
-
-.reportGrid2x2 {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 12px;
-}
-
+.reportStatNumber { display: block; color: #E8CE85; font-size: 22px; font-weight: 700; font-family: 'Cormorant Garamond', serif; margin-bottom: 2px; }
+.barRow { margin-bottom: 10px; }
+.barRowTop { display: flex; justify-content: space-between; margin-bottom: 4px; }
+.barRowLabel { color: #D8CBB0; font-size: 11.5px; }
+.barRowValue { color: #9C9384; font-size: 11px; }
+.barRowTrack { height: 6px; background: #221D14; border-radius: 4px; overflow: hidden; }
+.barRowFill { height: 100%; background: linear-gradient(90deg,#B8642F,#E8CE85); border-radius: 4px; }

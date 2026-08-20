@@ -32,19 +32,11 @@ function noPeriodo(dataKey, periodo) {
   if (periodo === "mes") {
     return data.getFullYear() === hoje.getFullYear() && data.getMonth() === hoje.getMonth();
   }
-  if (periodo === "30dias" || periodo === "7dias") {
-    const dias = periodo === "7dias" ? 7 : 30;
+  if (periodo === "30dias") {
     const diffDias = (hoje - data) / (1000 * 60 * 60 * 24);
-    return diffDias >= 0 && diffDias <= dias;
-  }
-  if (periodo === "ano") {
-    return data.getFullYear() === hoje.getFullYear();
+    return diffDias >= 0 && diffDias <= 30;
   }
   return true;
-}
-
-function clientKey(item) {
-  return (item.email || item.telefone || "").toLowerCase();
 }
 
 export default function AdminDashboard() {
@@ -282,7 +274,7 @@ export default function AdminDashboard() {
       porCliente[key].add(a.servicoId);
     });
     const comSessao = Object.values(porCliente).filter((s) => s.has("sessao"));
-    if (comSessao.length === 0) return { taxa: 0, total: 0, retornaram: 0 };
+    if (comSessao.length === 0) return 0;
     const comManutencao = comSessao.filter((s) => s.has("manutencao"));
     return { taxa: Math.round((comManutencao.length / comSessao.length) * 100), total: comSessao.length, retornaram: comManutencao.length };
   }, [agendamentos]);
@@ -300,78 +292,6 @@ export default function AdminDashboard() {
     if (notas.length === 0) return null;
     return { media: (notas.reduce((a, b) => a + b, 0) / notas.length).toFixed(1), total: notas.length };
   }, [avaliacoes]);
-
-  // Ticket médio
-  const ticketMedio = useMemo(() => {
-    const concluidos = noPeriodoAtual.filter((a) => a.status === "confirmado");
-    if (concluidos.length === 0) return 0;
-    return faturamentoTotal / concluidos.length;
-  }, [noPeriodoAtual, faturamentoTotal]);
-
-  // Comparação com o mês anterior
-  const periodoAnterior = useMemo(() => {
-    const hoje = new Date();
-    const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
-    return naoCancelados.filter((a) => {
-      if (!a.dataKey) return false;
-      const [ano, mes] = a.dataKey.split("-").map(Number);
-      return ano === mesAnterior.getFullYear() && mes - 1 === mesAnterior.getMonth();
-    });
-  }, [naoCancelados]);
-
-  const faturamentoAnterior = useMemo(
-    () => periodoAnterior.filter((a) => a.status === "confirmado").reduce((s, a) => s + (a.preco || 0), 0),
-    [periodoAnterior]
-  );
-
-  const variacaoFaturamento = faturamentoAnterior > 0
-    ? Math.round(((faturamentoTotal - faturamentoAnterior) / faturamentoAnterior) * 100)
-    : null;
-
-  // Atendimentos por semana (dentro do período atual)
-  const atendimentosPorSemana = useMemo(() => {
-    const semanas = {};
-    noPeriodoAtual.forEach((a) => {
-      if (!a.dataKey) return;
-      const [ano, mes, dia] = a.dataKey.split("-").map(Number);
-      const semanaIdx = Math.ceil(dia / 7);
-      semanas[semanaIdx] = (semanas[semanaIdx] || 0) + 1;
-    });
-    return [1, 2, 3, 4, 5].map((n) => ({ label: `Sem ${n}`, valor: semanas[n] || 0 }));
-  }, [noPeriodoAtual]);
-
-  // Clientes inativos 60+ dias
-  const clientesInativos60d = useMemo(() => {
-    const hoje = new Date();
-    const ultimaPorCliente = {};
-    agendamentos.forEach((a) => {
-      if (!a.dataKey || a.status === "cancelado") return;
-      const key = clientKey(a);
-      if (!key) return;
-      if (!ultimaPorCliente[key] || a.dataKey > ultimaPorCliente[key]) ultimaPorCliente[key] = a.dataKey;
-    });
-    return Object.values(ultimaPorCliente).filter((dataKey) => {
-      const [ano, mes, dia] = dataKey.split("-").map(Number);
-      const diff = (hoje - new Date(ano, mes - 1, dia)) / (1000 * 60 * 60 * 24);
-      return diff >= 60;
-    }).length;
-  }, [agendamentos]);
-
-  // Serviços mais vendidos (contagem)
-  const servicosMaisVendidos = useMemo(() => {
-    const contagem = {};
-    noPeriodoAtual.forEach((a) => {
-      if (!a.servicoNome) return;
-      contagem[a.servicoNome] = (contagem[a.servicoNome] || 0) + 1;
-    });
-    return Object.entries(contagem).sort((a, b) => b[1] - a[1]).slice(0, 5);
-  }, [noPeriodoAtual]);
-
-  const totalAvaliacoesPeriodo = Object.keys(avaliacoes).length;
-  const concluidosPeriodo = noPeriodoAtual.filter((a) => a.status === "confirmado").length;
-  const pctConcluidosAvaliaram = concluidosPeriodo > 0
-    ? Math.round((totalAvaliacoesPeriodo / concluidosPeriodo) * 100)
-    : 0;
 
   const filtrados = useMemo(() => {
     return agendamentos.filter((a) => {
@@ -666,9 +586,9 @@ export default function AdminDashboard() {
           <div className="adminSection">
             <div className="reportPeriodTabs">
               {[
-                { id: "7dias", label: "7 dias" },
                 { id: "mes", label: "Este mês" },
-                { id: "ano", label: "Ano" },
+                { id: "30dias", label: "Últimos 30 dias" },
+                { id: "tudo", label: "Tudo" },
               ].map((p) => (
                 <button
                   key={p.id}
@@ -681,95 +601,53 @@ export default function AdminDashboard() {
               ))}
             </div>
 
-            <div className="reportGrid2x2">
-              <div className="reportStatCard">
-                <span className="reportStatCardLabel">Faturamento do mês</span>
-                <span className="reportStatCardValue">{formatPreco(faturamentoTotal)}</span>
-                {variacaoFaturamento !== null && (
-                  <span className="reportStatCardDelta" style={{ color: variacaoFaturamento >= 0 ? "#6FCF97" : "#E07856" }}>
-                    {variacaoFaturamento >= 0 ? "▲" : "▼"} {Math.abs(variacaoFaturamento)}% vs. mês anterior
-                  </span>
-                )}
-              </div>
-
-              <div className="reportStatCard">
-                <span className="reportStatCardLabel">Ticket médio</span>
-                <span className="reportStatCardValue">{formatPreco(ticketMedio)}</span>
-              </div>
-
-              <div className="reportStatCard">
-                <span className="reportStatCardLabel">Taxa de comparecimento</span>
-                <span className="reportStatCardValue">{taxaComparecimento}%</span>
-              </div>
-
-              <div className="reportStatCard">
-                <span className="reportStatCardLabel">Taxa de cancelamento</span>
-                <span className="reportStatCardValue">{taxaCancelamento}%</span>
-              </div>
+            <div className="reportCard">
+              <div className="reportCardTitle">Faturamento</div>
+              <div className="reportBigNumber">{formatPreco(faturamentoTotal)}</div>
+              <p className="pMutedSmall" style={{ marginBottom: 10 }}>Somente atendimentos concluídos</p>
+              {faturamentoPorServico.map(([nome, valor]) => (
+                <BarRow key={nome} label={nome} value={valor} max={faturamentoTotal || 1} formatValue={formatPreco} />
+              ))}
             </div>
 
             <div className="reportCard">
-              <div className="reportCardTitle">Atendimentos por semana</div>
-              <div className="weekBarChart">
-                {atendimentosPorSemana.map((s) => {
-                  const max = Math.max(...atendimentosPorSemana.map((x) => x.valor), 1);
-                  const alturaPct = Math.max(8, Math.round((s.valor / max) * 100));
-                  return (
-                    <div key={s.label} className="weekBarCol">
-                      <div className="weekBarTrack">
-                        <div className="weekBarFill" style={{ height: `${alturaPct}%` }} />
-                      </div>
-                      <span className="weekBarLabel">{s.label}</span>
-                    </div>
-                  );
-                })}
-              </div>
+              <div className="reportCardTitle">Atendimentos por dia da semana</div>
+              {atendimentosPorDiaSemana.map((d) => (
+                <BarRow key={d.label} label={d.label} value={d.valor} max={Math.max(...atendimentosPorDiaSemana.map((x) => x.valor), 1)} />
+              ))}
             </div>
 
             <div className="reportCard">
-              <div className="reportCardTitle">Serviços mais vendidos</div>
-              {servicosMaisVendidos.length === 0 ? (
+              <div className="reportCardTitle">Horários mais pedidos</div>
+              {atendimentosPorHorario.length === 0 ? (
                 <p className="pMutedSmall">Sem dados nesse período.</p>
               ) : (
-                servicosMaisVendidos.map(([nome, qtd], i) => (
-                  <div key={nome} className="rankRow">
-                    <span className="rankRowLabel">{i + 1}º {nome}</span>
-                    <span className="rankRowValue">{qtd} sessões</span>
-                  </div>
+                atendimentosPorHorario.map((h) => (
+                  <BarRow key={h.label} label={h.label} value={h.valor} max={Math.max(...atendimentosPorHorario.map((x) => x.valor), 1)} />
                 ))
               )}
             </div>
 
-            <div className="reportCard">
-              <div className="reportCardTitle">Clientes</div>
-              <div className="clientsRow">
-                <div className="clientsCol">
-                  <span className="reportStatNumber">{clientesNovos}</span>
-                  <span className="adminStatLabel">Novos</span>
-                </div>
-                <div className="clientsCol">
-                  <span className="reportStatNumber">{clientesRecorrentes}</span>
-                  <span className="adminStatLabel">Recorrentes</span>
-                </div>
-                <div className="clientsCol">
-                  <span className="reportStatNumber">{clientesInativos60d}</span>
-                  <span className="adminStatLabel">Inativos 60d+</span>
-                </div>
+            <div className="reportStatsRow">
+              <div className="reportStatBox">
+                <span className="reportStatNumber" style={{ color: "#E07856" }}>{taxaCancelamento}%</span>
+                <span className="adminStatLabel">Cancelamento</span>
+              </div>
+              <div className="reportStatBox">
+                <span className="reportStatNumber" style={{ color: "#6FCF97" }}>{taxaComparecimento}%</span>
+                <span className="adminStatLabel">Comparecimento</span>
               </div>
             </div>
 
-            <div className="reportCard">
-              <div className="reportCardTitle">Satisfação</div>
-              <div className="satisfactionRow">
-                <span className="reportBigNumber">{mediaAvaliacao || "—"}</span>
-                <span className="satisfactionStars">
-                  {"★".repeat(Math.round(Number(mediaAvaliacao) || 0))}
-                  {"☆".repeat(5 - Math.round(Number(mediaAvaliacao) || 0))}
-                </span>
+            <div className="reportStatsRow">
+              <div className="reportStatBox">
+                <span className="reportStatNumber">{clientesNovos}</span>
+                <span className="adminStatLabel">Clientes novos</span>
               </div>
-              <p className="pMutedSmall">
-                {totalAvaliacoesPeriodo} avaliações · {pctConcluidosAvaliaram}% dos concluídos avaliaram
-              </p>
+              <div className="reportStatBox">
+                <span className="reportStatNumber">{clientesRecorrentes}</span>
+                <span className="adminStatLabel">Recorrentes</span>
+              </div>
             </div>
 
             <div className="reportCard">
@@ -816,6 +694,10 @@ function BarRow({ label, value, max, formatValue }) {
       </div>
     </div>
   );
+}
+
+function clientKey(item) {
+  return (item.email || item.telefone || "").toLowerCase();
 }
 
 function AdminSection({ title, icon, items, contagemPorCliente, avaliacoes, onSetStatus, onDelete }) {
