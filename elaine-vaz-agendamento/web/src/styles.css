@@ -365,7 +365,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 .rescheduleBox { border-top: 1px solid #221D14; margin-top: 12px; padding-top: 10px; }
 
 /* Relatório */
-.reportPeriodTabs { display: flex; gap: 8px; margin-bottom: 18px; }
+.reportPeriodTabs { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
 .reportPeriodBtn {
   border: 1.5px solid #2A241A; border-radius: 20px; padding: 7px 14px; font-size: 11.5px;
   font-weight: 600; cursor: pointer; font-family: 'Manrope', sans-serif;
@@ -385,6 +385,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 .barRowValue { color: #9C9384; font-size: 11px; }
 .barRowTrack { height: 6px; background: #221D14; border-radius: 4px; overflow: hidden; }
 .barRowFill { height: 100%; background: linear-gradient(90deg,#B8642F,#E8CE85); border-radius: 4px; }
+
 /* Filtro de período personalizado (relatório) */
 .reportDateRange {
   display: flex;
@@ -426,3 +427,39 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   from { opacity: 0; transform: translateY(-4px); }
   to { opacity: 1; transform: translateY(0); }
 }
+
+/* Grid de cards do relatório (com comparação vs período anterior) */
+.reportStatsGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+.reportStatCard {
+  background: #131009;
+  border: 1px solid #221D14;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+.reportStatCardTitle {
+  color: #8A8272;
+  font-size: 11px;
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+.reportStatCardValue {
+  color: #F3ECDD;
+  font-size: 22px;
+  font-weight: 700;
+  font-family: 'Cormorant Garamond', serif;
+  margin-bottom: 6px;
+}
+.reportStatCardDelta {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.reportStatCardDelta.positive { color: #6FCF97; }
+.reportStatCardDelta.negative { color: #E07856; }

@@ -3,6 +3,7 @@ import { collection, query, orderBy, onSnapshot, doc, updateDoc, setDoc, deleteD
 import {
   Chrome, Clock, CheckCircle2, XCircle, Phone, Mail, Calendar,
   Search, Star, TrendingUp, Users, MessageCircle, CalendarOff, Trash2, Activity, Bell, BarChart3,
+  ArrowUp, ArrowDown,
 } from "lucide-react";
 import { SERVICES, WEEKDAY_SLOTS, SUNDAY_SLOTS, formatPreco } from "../../shared/services";
 import { useAuth } from "./hooks/useAuth";
@@ -45,6 +46,43 @@ function noPeriodo(dataKey, periodo, customStart, customEnd) {
     return diffDias >= 0 && diffDias <= 30;
   }
   return true;
+}
+
+function noPeriodoAnterior(dataKey, periodo, customStart, customEnd) {
+  if (!dataKey) return false;
+  const [ano, mes, dia] = dataKey.split("-").map(Number);
+  const data = new Date(ano, mes - 1, dia);
+  const hoje = new Date();
+
+  if (periodo === "mes") {
+    const mesAnterior = new Date(hoje.getFullYear(), hoje.getMonth() - 1, 1);
+    return data.getFullYear() === mesAnterior.getFullYear() && data.getMonth() === mesAnterior.getMonth();
+  }
+  if (periodo === "30dias") {
+    const diffDias = (hoje - data) / (1000 * 60 * 60 * 24);
+    return diffDias > 30 && diffDias <= 60;
+  }
+  if (periodo === "custom") {
+    if (!customStart || !customEnd) return false;
+    const inicio = new Date(customStart);
+    const fim = new Date(customEnd);
+    const duracaoDias = Math.round((fim - inicio) / (1000 * 60 * 60 * 24)) + 1;
+    const fimAnterior = new Date(inicio);
+    fimAnterior.setDate(fimAnterior.getDate() - 1);
+    const inicioAnterior = new Date(fimAnterior);
+    inicioAnterior.setDate(inicioAnterior.getDate() - duracaoDias + 1);
+    return data >= inicioAnterior && data <= fimAnterior;
+  }
+  return false; // "tudo" não tem período anterior pra comparar
+}
+
+function calcDelta(atual, anterior) {
+  if (!anterior) return null;
+  return Math.round(((atual - anterior) / anterior) * 100);
+}
+
+function clientKey(item) {
+  return (item.email || item.telefone || "").toLowerCase();
 }
 
 export default function AdminDashboard() {
@@ -224,8 +262,14 @@ export default function AdminDashboard() {
   const [customEnd, setCustomEnd] = useState("");
 
   const naoCancelados = useMemo(() => agendamentos.filter((a) => a.status !== "cancelado"), [agendamentos]);
+
   const noPeriodoAtual = useMemo(
     () => naoCancelados.filter((a) => noPeriodo(a.dataKey, periodoRelatorio, customStart, customEnd)),
+    [naoCancelados, periodoRelatorio, customStart, customEnd]
+  );
+
+  const noPeriodoAnteriorLista = useMemo(
+    () => naoCancelados.filter((a) => noPeriodoAnterior(a.dataKey, periodoRelatorio, customStart, customEnd)),
     [naoCancelados, periodoRelatorio, customStart, customEnd]
   );
 
@@ -233,6 +277,21 @@ export default function AdminDashboard() {
     () => noPeriodoAtual.filter((a) => a.status === "confirmado").reduce((soma, a) => soma + (a.preco || 0), 0),
     [noPeriodoAtual]
   );
+
+  const faturamentoAnterior = useMemo(
+    () => noPeriodoAnteriorLista.filter((a) => a.status === "confirmado").reduce((soma, a) => soma + (a.preco || 0), 0),
+    [noPeriodoAnteriorLista]
+  );
+
+  const ticketMedioAtual = useMemo(() => {
+    const confirmadosAtual = noPeriodoAtual.filter((a) => a.status === "confirmado");
+    return confirmadosAtual.length ? faturamentoTotal / confirmadosAtual.length : 0;
+  }, [noPeriodoAtual, faturamentoTotal]);
+
+  const ticketMedioAnterior = useMemo(() => {
+    const confirmadosAnterior = noPeriodoAnteriorLista.filter((a) => a.status === "confirmado");
+    return confirmadosAnterior.length ? faturamentoAnterior / confirmadosAnterior.length : 0;
+  }, [noPeriodoAnteriorLista, faturamentoAnterior]);
 
   const faturamentoPorServico = useMemo(() => {
     const mapa = {};
@@ -269,11 +328,24 @@ export default function AdminDashboard() {
     return Math.round((cancelados / totalPeriodo.length) * 100);
   }, [agendamentos, periodoRelatorio, customStart, customEnd]);
 
+  const taxaCancelamentoAnterior = useMemo(() => {
+    const totalAnterior = agendamentos.filter((a) => noPeriodoAnterior(a.dataKey, periodoRelatorio, customStart, customEnd));
+    if (totalAnterior.length === 0) return 0;
+    const cancelados = totalAnterior.filter((a) => a.status === "cancelado").length;
+    return Math.round((cancelados / totalAnterior.length) * 100);
+  }, [agendamentos, periodoRelatorio, customStart, customEnd]);
+
   const taxaComparecimento = useMemo(() => {
     if (noPeriodoAtual.length === 0) return 0;
     const compareceram = noPeriodoAtual.filter((a) => a.status === "confirmado" || a.status === "presenca_confirmada").length;
     return Math.round((compareceram / noPeriodoAtual.length) * 100);
   }, [noPeriodoAtual]);
+
+  const taxaComparecimentoAnterior = useMemo(() => {
+    if (noPeriodoAnteriorLista.length === 0) return 0;
+    const compareceram = noPeriodoAnteriorLista.filter((a) => a.status === "confirmado" || a.status === "presenca_confirmada").length;
+    return Math.round((compareceram / noPeriodoAnteriorLista.length) * 100);
+  }, [noPeriodoAnteriorLista]);
 
   const taxaRetornoManutencao = useMemo(() => {
     const porCliente = {};
@@ -284,7 +356,7 @@ export default function AdminDashboard() {
       porCliente[key].add(a.servicoId);
     });
     const comSessao = Object.values(porCliente).filter((s) => s.has("sessao"));
-    if (comSessao.length === 0) return 0;
+    if (comSessao.length === 0) return { taxa: 0, total: 0, retornaram: 0 };
     const comManutencao = comSessao.filter((s) => s.has("manutencao"));
     return { taxa: Math.round((comManutencao.length / comSessao.length) * 100), total: comSessao.length, retornaram: comManutencao.length };
   }, [agendamentos]);
@@ -636,9 +708,31 @@ export default function AdminDashboard() {
               </div>
             )}
 
+            <div className="reportStatsGrid">
+              <ReportStatCard
+                title="Faturamento do período"
+                value={formatPreco(faturamentoTotal)}
+                delta={calcDelta(faturamentoTotal, faturamentoAnterior)}
+              />
+              <ReportStatCard
+                title="Ticket médio"
+                value={formatPreco(ticketMedioAtual)}
+                delta={calcDelta(ticketMedioAtual, ticketMedioAnterior)}
+              />
+              <ReportStatCard
+                title="Taxa de comparecimento"
+                value={`${taxaComparecimento}%`}
+                delta={calcDelta(taxaComparecimento, taxaComparecimentoAnterior)}
+              />
+              <ReportStatCard
+                title="Taxa de cancelamento"
+                value={`${taxaCancelamento}%`}
+                delta={calcDelta(taxaCancelamento, taxaCancelamentoAnterior)}
+              />
+            </div>
+
             <div className="reportCard">
-              <div className="reportCardTitle">Faturamento</div>
-              <div className="reportBigNumber">{formatPreco(faturamentoTotal)}</div>
+              <div className="reportCardTitle">Faturamento por serviço</div>
               <p className="pMutedSmall" style={{ marginBottom: 10 }}>Somente atendimentos concluídos</p>
               {faturamentoPorServico.map(([nome, valor]) => (
                 <BarRow key={nome} label={nome} value={valor} max={faturamentoTotal || 1} formatValue={formatPreco} />
@@ -661,17 +755,6 @@ export default function AdminDashboard() {
                   <BarRow key={h.label} label={h.label} value={h.valor} max={Math.max(...atendimentosPorHorario.map((x) => x.valor), 1)} />
                 ))
               )}
-            </div>
-
-            <div className="reportStatsRow">
-              <div className="reportStatBox">
-                <span className="reportStatNumber" style={{ color: "#E07856" }}>{taxaCancelamento}%</span>
-                <span className="adminStatLabel">Cancelamento</span>
-              </div>
-              <div className="reportStatBox">
-                <span className="reportStatNumber" style={{ color: "#6FCF97" }}>{taxaComparecimento}%</span>
-                <span className="adminStatLabel">Comparecimento</span>
-              </div>
             </div>
 
             <div className="reportStatsRow">
@@ -716,6 +799,22 @@ export default function AdminDashboard() {
   );
 }
 
+function ReportStatCard({ title, value, delta }) {
+  const isPositive = delta != null && delta >= 0;
+  return (
+    <div className="reportStatCard">
+      <div className="reportStatCardTitle">{title}</div>
+      <div className="reportStatCardValue">{value}</div>
+      {delta != null && (
+        <div className={`reportStatCardDelta ${isPositive ? "positive" : "negative"}`}>
+          {isPositive ? <ArrowUp size={12} /> : <ArrowDown size={12} />}
+          {Math.abs(delta)}% vs. período anterior
+        </div>
+      )}
+    </div>
+  );
+}
+
 function BarRow({ label, value, max, formatValue }) {
   const pct = Math.max(4, Math.round((value / max) * 100));
   return (
@@ -729,10 +828,6 @@ function BarRow({ label, value, max, formatValue }) {
       </div>
     </div>
   );
-}
-
-function clientKey(item) {
-  return (item.email || item.telefone || "").toLowerCase();
 }
 
 function AdminSection({ title, icon, items, contagemPorCliente, avaliacoes, onSetStatus, onDelete }) {
