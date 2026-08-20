@@ -293,15 +293,6 @@ export default function AdminDashboard() {
     return confirmadosAnterior.length ? faturamentoAnterior / confirmadosAnterior.length : 0;
   }, [noPeriodoAnteriorLista, faturamentoAnterior]);
 
-  const faturamentoPorServico = useMemo(() => {
-    const mapa = {};
-    noPeriodoAtual.filter((a) => a.status === "confirmado").forEach((a) => {
-      const nome = a.servicoNome || "Outro";
-      mapa[nome] = (mapa[nome] || 0) + (a.preco || 0);
-    });
-    return Object.entries(mapa).sort((a, b) => b[1] - a[1]);
-  }, [noPeriodoAtual]);
-
   // Ranking de serviços mais vendidos (por quantidade, não faturamento)
   const servicosMaisVendidos = useMemo(() => {
     const contagem = {};
@@ -765,14 +756,6 @@ export default function AdminDashboard() {
                   ))}
                 </div>
               )}
-            </div>
-
-            <div className="reportCard">
-              <div className="reportCardTitle">Faturamento por serviço</div>
-              <p className="pMutedSmall" style={{ marginBottom: 10 }}>Somente atendimentos concluídos</p>
-              {faturamentoPorServico.map(([nome, valor]) => (
-                <BarRow key={nome} label={nome} value={valor} max={faturamentoTotal || 1} formatValue={formatPreco} />
-              ))}
             </div>
 
             <div className="reportCard">
