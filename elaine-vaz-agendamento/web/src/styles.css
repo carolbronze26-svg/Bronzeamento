@@ -378,10 +378,4 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   flex: 1; background: #131009; border: 1px solid #221D14; border-radius: 14px;
   padding: 14px; text-align: center;
 }
-.reportStatNumber { display: block; color: #E8CE85; font-size: 22px; font-weight: 700; font-family: 'Cormorant Garamond', serif; margin-bottom: 2px; }
-.barRow { margin-bottom: 10px; }
-.barRowTop { display: flex; justify-content: space-between; margin-bottom: 4px; }
-.barRowLabel { color: #D8CBB0; font-size: 11.5px; }
-.barRowValue { color: #9C9384; font-size: 11px; }
-.barRowTrack { height: 6px; background: #221D14; border-radius: 4px; overflow: hidden; }
-.barRowFill { height: 100%; background: linear-gradient(90deg,#B8642F,#E8CE85); border-radius: 4px; }
+.reportStatNumber { display: block; color: #E8CE85;
