@@ -94,7 +94,15 @@ function IntroScreen({ onFinish }) {
 }
 
 export default function App() {
-  const { user, loading, login, logout, authError } = useAuth();
+  const {
+  user,
+  loading,
+  login,
+  logout,
+  authError,
+  loginWithWhatsApp,   // novo
+  sendWhatsAppOtp,     // novo
+} = useAuth();
   const { canInstall, promptInstall } = useInstallPrompt();
   const [dismissedInstall, setDismissedInstall] = useState(false);
   const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("introSeen"));
@@ -134,8 +142,15 @@ export default function App() {
 
         <div className="body">
           {activeTab === "entrar" && (
-            <EntrarTab user={user} onLogin={login} onLogout={logout} authError={authError} />
-          )}
+            <EntrarTab
+             user={user}
+              onLogin={login}
+              onLogout={logout}
+              authError={authError}
+             onLoginWhatsApp={loginWithWhatsApp}
+             onSendOtp={sendWhatsAppOtp}
+               />
+              )}
           {activeTab === "agendamento" && (
             <AgendamentoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} />
           )}
@@ -197,13 +212,24 @@ function InstallBanner({ onInstall, onDismiss }) {
 // ---------------------------------------------------------------------------
 // Aba: Entrar
 // ---------------------------------------------------------------------------
-function EntrarTab({ user, onLogin, onLogout, authError }) {
+function EntrarTab({ user, onLogin, onLogout, authError, onLoginWhatsApp, onSendOtp }) {
+  const [step, setStep] = useState("menu"); // menu | phone | code
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [loadingOtp, setLoadingOtp] = useState(false);
+  const [otpError, setOtpError] = useState(null);
+
+  // Quando o usuário já está logado
   if (user) {
     return (
       <div className="stepCenter">
         {user.photoURL && <img src={user.photoURL} alt="" className="userAvatar" />}
-        <h1 className="h1">Olá, {user.displayName?.split(" ")[0]}!</h1>
-        <p className="pMuted">Você está conectado como {user.email}.</p>
+        <h1 className="h1">Olá, {user.displayName?.split(" ")[0] || "Cliente"}!</h1>
+        <p className="pMuted">
+          {user.email
+            ? `Você está conectado como ${user.email}`
+            : `Você está conectado com o WhatsApp`}
+        </p>
         <button className="ghostBtn" style={{ maxWidth: 220 }} onClick={onLogout}>
           <LogOut size={14} style={{ marginRight: 6, verticalAlign: -2 }} />
           Sair
@@ -212,24 +238,174 @@ function EntrarTab({ user, onLogin, onLogout, authError }) {
     );
   }
 
-  return (
-    <div className="stepCenter">
-      <img src="/logo-carol-sampaio.png" alt="Carol Sampaio - Beleza que você vê, saúde que você sente" className="loginLogo" />
-      <p className="pMuted">Entre com sua conta Google para marcar seu horário em segundos.</p>
-      <button className="googleBtn" onClick={onLogin}>
-        <Chrome size={18} />
-        Continuar com Google
-      </button>
-      {authError && (
-        <p className="loginError">
-          Não foi possível entrar com o Google. Verifique sua conexão e tente novamente.
+  // ===== Tela inicial (escolha do método) =====
+  if (step === "menu") {
+    return (
+      <div className="stepCenter">
+        <img
+          src="/logo-carol-sampaio.png"
+          alt="Carol Sampaio - Beleza que você vê, saúde que você sente"
+          className="loginLogo"
+        />
+        <p className="pMuted" style={{ marginBottom: 28 }}>
+          Entre para marcar seu horário em segundos.
         </p>
-      )}
-      <p className="fineprint">
-        Ao continuar, você concorda com o uso dos seus dados apenas para confirmar e lembrar seus agendamentos.
-      </p>
-    </div>
-  );
+
+        {/* Botão Google */}
+        <button className="googleBtn" onClick={onLogin} style={{ marginBottom: 12 }}>
+          <Chrome size={18} />
+          Continuar com Google
+        </button>
+
+        {/* Separador */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12, width: "100%", maxWidth: 280, margin: "8px 0 16px" }}>
+          <div style={{ flex: 1, height: 1, background: "#2A241A" }} />
+          <span style={{ color: "#6B6459", fontSize: 12, fontWeight: 600 }}>ou</span>
+          <div style={{ flex: 1, height: 1, background: "#2A241A" }} />
+        </div>
+
+        {/* Botão WhatsApp */}
+        <button
+          className="whatsBtn"
+          style={{ maxWidth: 280, marginBottom: 8 }}
+          onClick={() => {
+            setStep("phone");
+            setOtpError(null);
+          }}
+        >
+          <MessageCircle size={18} />
+          Continuar com WhatsApp
+        </button>
+
+        {authError && (
+          <p className="loginError">
+            Não foi possível entrar. Verifique sua conexão e tente novamente.
+          </p>
+        )}
+
+        <p className="fineprint">
+          Ao continuar, você concorda com o uso dos seus dados apenas para confirmar e lembrar seus agendamentos.
+        </p>
+      </div>
+    );
+  }
+
+  // ===== Passo 1: digitar o telefone =====
+  if (step === "phone") {
+    return (
+      <div className="stepCenter">
+        <h1 className="h1" style={{ marginBottom: 8 }}>WhatsApp</h1>
+        <p className="pMuted" style={{ marginBottom: 24 }}>
+          Digite seu número com DDD para receber o código de acesso.
+        </p>
+
+        <div className="phoneWrap" style={{ width: "100%", maxWidth: 280 }}>
+          <label className="phoneLabel">Seu WhatsApp</label>
+          <input
+            type="tel"
+            className="phoneInput"
+            placeholder="(11) 99999-9999"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            autoFocus
+          />
+        </div>
+
+        {otpError && <p className="loginError">{otpError}</p>}
+
+        <button
+          className="primaryBtn"
+          style={{ maxWidth: 280, marginTop: 20 }}
+          disabled={loadingOtp || phone.replace(/\D/g, "").length < 10}
+          onClick={async () => {
+            setLoadingOtp(true);
+            setOtpError(null);
+            try {
+              await onSendOtp(phone);
+              setStep("code");
+            } catch (err) {
+              setOtpError(err.message || "Erro ao enviar código. Tente novamente.");
+            } finally {
+              setLoadingOtp(false);
+            }
+          }}
+        >
+          {loadingOtp ? "Enviando..." : "Receber código"}
+        </button>
+
+        <button
+          className="backLink"
+          onClick={() => {
+            setStep("menu");
+            setPhone("");
+            setOtpError(null);
+          }}
+        >
+          ← Voltar
+        </button>
+      </div>
+    );
+  }
+
+  // ===== Passo 2: digitar o código =====
+  if (step === "code") {
+    return (
+      <div className="stepCenter">
+        <h1 className="h1" style={{ marginBottom: 8 }}>Código enviado</h1>
+        <p className="pMuted" style={{ marginBottom: 24 }}>
+          Digite o código de 6 dígitos que enviamos no seu WhatsApp.
+        </p>
+
+        <div className="phoneWrap" style={{ width: "100%", maxWidth: 280 }}>
+          <label className="phoneLabel">Código de verificação</label>
+          <input
+            type="text"
+            className="phoneInput"
+            placeholder="000000"
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
+            maxLength={6}
+            style={{ textAlign: "center", letterSpacing: "8px", fontSize: 22, fontWeight: 700 }}
+            autoFocus
+          />
+        </div>
+
+        {otpError && <p className="loginError">{otpError}</p>}
+
+        <button
+          className="primaryBtn"
+          style={{ maxWidth: 280, marginTop: 20 }}
+          disabled={loadingOtp || code.length !== 6}
+          onClick={async () => {
+            setLoadingOtp(true);
+            setOtpError(null);
+            try {
+              await onLoginWhatsApp(phone, code);
+            } catch (err) {
+              setOtpError(err.message || "Código inválido ou expirado.");
+            } finally {
+              setLoadingOtp(false);
+            }
+          }}
+        >
+          {loadingOtp ? "Verificando..." : "Entrar"}
+        </button>
+
+        <button
+          className="backLink"
+          onClick={() => {
+            setStep("phone");
+            setCode("");
+            setOtpError(null);
+          }}
+        >
+          ← Alterar número
+        </button>
+      </div>
+    );
+  }
+
+  return null;
 }
 
 // ---------------------------------------------------------------------------
