@@ -637,7 +637,7 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         />
       )}
 
-            {subStep === 1 && isPacote && (
+                  {subStep === 1 && isPacote && (
         <PackageDateTimeStep
           cells={cells}
           monthLabel={monthLabel}
@@ -668,6 +668,28 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         />
       )}
 
+      {subStep === 1 && !isPacote && (
+        <DateTimeStep
+          cells={cells}
+          monthLabel={monthLabel}
+          selectedDay={selectedDay}
+          setSelectedDay={handleSelectDay}
+          isSunday={isSunday}
+          isClosed={isClosed}
+          isDisabled={isDisabled}
+          onPrevMonth={() => setMonthOffset((m) => m - 1)}
+          onNextMonth={() => setMonthOffset((m) => m + 1)}
+          slots={availableSlots}
+          selectedTime={selectedTime}
+          setSelectedTime={setSelectedTime}
+          phone={phone}
+          setPhone={setPhone}
+          onNext={handleConfirmClick}
+          onBack={() => setSubStep(0)}
+          saving={saving}
+        />
+      )}
+
       {subStep === 2 && isPacote && (
         <PackageConfirmStep
           service={service}
@@ -692,7 +714,7 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           onBack={() => setSubStep(1)}
         />
       )}
-            {showAmigaPopup && (
+      {showAmigaPopup && (
         <AmigaPopup
           onClose={() => setShowAmigaPopup(false)}
           onConfirm={(dados) => {
