@@ -37,7 +37,7 @@ export const SERVICES = [
     professional: "Carol",
     preco: 150.0,
     tag: "Promoção de setembro",
-    info: "Promoção válida em setembro/2026: 2 sessões de bronzeamento por R$150. Agende as duas sessões (podem ser em datas diferentes). Válido apenas durante o mês de setembro.",
+    info: "Promoção válida em setembro/2026: 2 sessões de bronzeamento por R$150. Agende as duas sessões (Não podem ser em datas diferentes). Válido apenas durante o mês de setembro.",
   },
 ];
 

@@ -546,41 +546,57 @@ function AgendamentoTab({ user, onGoToEntrar }) {
     setSessoesPacote((prev) => prev.filter((_, i) => i !== index));
   }
 
-  async function handleConfirmPacote() {
-    const pacoteId = `pct_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-    try {
-      for (let i = 0; i < sessoesPacote.length; i++) {
-        const s = sessoesPacote[i];
-        const id = await createBooking({
-          usuarioId: user.uid,
-          nome: user.displayName,
-          email: user.email,
-          telefone: phone,
-          servico: {
-            id: service.id,
-            name: "Bronzeamento",
-            professional: service.professional,
-            preco: i === 0 ? service.preco : 0,
-          },
-          dateKey: s.dateKey,
-          dateLabel: s.dateLabel,
-          horario: s.horario,
-          extra: { pacoteId, sessaoDoPacote: i + 1, totalSessoesPacote: sessoesPacote.length },
-        });
-        if (i === 0) setBookingId(id);
-      }
-      sendPackageConfirmationEmail({
+  async function handleConfirmPacote(amiga = amigaInfo) {
+  const pacoteId = `pct_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  try {
+    for (let i = 0; i < sessoesPacote.length; i++) {
+      const s = sessoesPacote[i];
+      const id = await createBooking({
+        usuarioId: user.uid,
         nome: user.displayName,
         email: user.email,
         telefone: phone,
-        sessoes: sessoesPacote,
+        servico: {
+          id: service.id,
+          name: "Bronzeamento",
+          professional: service.professional,
+          preco: i === 0 ? service.preco : 0,
+        },
+        dateKey: s.dateKey,
+        dateLabel: s.dateLabel,
+        horario: s.horario,
+        extra: {
+          pacoteId,
+          sessaoDoPacote: i + 1,
+          totalSessoesPacote: sessoesPacote.length,
+          ...(isAmigaPromo && amiga
+            ? { amigaNome: amiga.nome, amigaTelefone: amiga.telefone }
+            : {}),
+        },
       });
-      setWhatsappLink(buildWhatsappPacoteLink({ sessoes: sessoesPacote, clientName: user.displayName }));
-      setSubStep(2);
-    } catch (err) {
-      alert("Não foi possível confirmar o pacote. Tente novamente em instantes.");
+      if (i === 0) setBookingId(id);
     }
+    sendPackageConfirmationEmail({
+      nome: user.displayName,
+      email: user.email,
+      telefone: phone,
+      sessoes: sessoesPacote,
+      amigaNome: amiga?.nome,
+      amigaTelefone: amiga?.telefone,
+    });
+    setWhatsappLink(
+      buildWhatsappPacoteLink({
+        sessoes: sessoesPacote,
+        clientName: user.displayName,
+        amigaNome: amiga?.nome,
+        amigaTelefone: amiga?.telefone,
+      })
+    );
+    setSubStep(2);
+  } catch (err) {
+    alert("Não foi possível confirmar o pacote. Tente novamente em instantes.");
   }
+}
 
   if (!user) {
     return (
@@ -640,11 +656,14 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           onRemoveSessao={handleRemoveSessaoPacote}
           phone={phone}
           setPhone={setPhone}
-          onNext={handleConfirmPacote}
-          onBack={() => setSubStep(0)}
-          saving={saving}
-        />
-      )}
+          onNext={() => {
+        if (isAmigaPromo && !amigaInfo) {
+         setShowAmigaPopup(true);
+         return;
+              }
+          handleConfirmPacote();
+            }}
+
 
       {subStep === 1 && !isPacote && (
         <DateTimeStep
@@ -692,20 +711,21 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           onBack={() => setSubStep(1)}
         />
       )}
-
       {showAmigaPopup && (
-        <AmigaPopup
-          onClose={() => setShowAmigaPopup(false)}
-          onConfirm={(dados) => {
-            setAmigaInfo(dados);
-            setShowAmigaPopup(false);
-            handleConfirm(dados);
-          }}
-        />
-      )}
-    </div>
-  );
-}
+  <AmigaPopup
+    onClose={() => setShowAmigaPopup(false)}
+    onConfirm={(dados) => {
+      setAmigaInfo(dados);
+      setShowAmigaPopup(false);
+      if (isPacote) {
+        handleConfirmPacote(dados);
+      } else {
+        handleConfirm(dados);
+      }
+    }}
+  />
+)}
+
 
 function MiniProgress({ step, steps }) {
   return (
