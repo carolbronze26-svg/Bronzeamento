@@ -500,3 +500,44 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   font-weight: 700;
   white-space: nowrap;
 }
+.promoOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 20px;
+}
+.promoBox {
+  position: relative;
+  max-width: 380px;
+  width: 100%;
+  border-radius: 16px;
+  overflow: hidden;
+  animation: promoIn 0.25s ease;
+}
+.promoImg {
+  width: 100%;
+  display: block;
+  border-radius: 16px;
+}
+.promoCloseBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: rgba(0,0,0,0.6);
+  color: #fff;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 16px;
+  cursor: pointer;
+  z-index: 10;
+}
+@keyframes promoIn {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}

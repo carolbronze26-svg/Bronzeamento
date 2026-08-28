@@ -5,6 +5,7 @@ import { useBlockedDates, isDiaTotalmenteBloqueado, getHorariosBloqueados } from
 import { WEEKDAY_SLOTS, SUNDAY_SLOTS } from "../../shared/services";
 import { useMyBookings, cancelarMeuAgendamento, reagendarMeuAgendamento, confirmarPresenca } from "./hooks/useMyBookings";
 
+
 const STATUS_LABEL = {
   pendente: { label: "Pendente", color: "#E8CE85" },
   confirmado: { label: "Confirmado", color: "#6FCF97" },

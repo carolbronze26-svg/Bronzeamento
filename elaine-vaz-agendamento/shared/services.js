@@ -30,7 +30,17 @@ export const SERVICES = [
     numeroSessoes: 4,
     info: "4 sessões de bronzeamento. Inclui protetor solar, esfoliação, montagem de biquíni de fita, parafina, ativadores e óculos de proteção para uso na máquina.",
   },
+  {
+   id: "amiga-chama-amiga",
+    name: "Amiga chama Amiga",
+    duration: "2 sessões de Bronzeamento",
+    professional: "Carol",
+    preco: 150.0,
+    tag: "Promoção de setembro",
+    info: "Promoção válida em setembro/2026: 2 sessões de bronzeamento por R$150. Agende as duas sessões (podem ser em datas diferentes). Válido apenas durante o mês de setembro.",
+  },
 ];
+
 
 // Horários de atendimento:
 // - Segunda a sexta: 19h, 20h30 e 22h
