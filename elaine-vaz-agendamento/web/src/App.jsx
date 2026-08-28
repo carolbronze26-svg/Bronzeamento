@@ -14,6 +14,8 @@ import { sendConfirmationEmail, sendPackageConfirmationEmail } from "./sendConfi
 import { ReviewCard } from "./ReviewsPage.jsx";
 import "./styles.css";
 import PromoPopup from "./PromoPopup";
+import AmigaPopup from "./AmigaPopup";
+
 
 const DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const CAROL_WHATSAPP = "5511931101976";
@@ -430,6 +432,11 @@ function AgendamentoTab({ user, onGoToEntrar }) {
   const [sessoesPacote, setSessoesPacote] = useState([]);
   const isPacote = !!service?.pacote;
 
+  // ---- Promoção "Amiga chama Amiga" ----
+  const [amigaInfo, setAmigaInfo] = useState(null);
+  const [showAmigaPopup, setShowAmigaPopup] = useState(false);
+  const isAmigaPromo = service?.id === "amiga-chama-amiga";
+
   const today = new Date();
   const viewDate = new Date(today.getFullYear(), today.getMonth() + monthOffset, 1);
   const cells = useMemo(() => buildMonth(viewDate.getFullYear(), viewDate.getMonth()), [monthOffset]);
@@ -474,7 +481,17 @@ function AgendamentoTab({ user, onGoToEntrar }) {
       month: "long",
     });
 
-  async function handleConfirm() {
+  // Se for a promoção "Amiga chama Amiga" e ainda não temos os dados da
+  // amiga, abre o pop-up antes de confirmar. Senão, confirma direto.
+  function handleConfirmClick() {
+    if (isAmigaPromo && !amigaInfo) {
+      setShowAmigaPopup(true);
+      return;
+    }
+    handleConfirm();
+  }
+
+  async function handleConfirm(amiga = amigaInfo) {
     const dateKey = toDateKey(viewDate.getFullYear(), viewDate.getMonth(), selectedDay);
     try {
       const id = await createBooking({
@@ -486,6 +503,10 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         dateKey,
         dateLabel,
         horario: selectedTime,
+        extra:
+          isAmigaPromo && amiga
+            ? { amigaNome: amiga.nome, amigaTelefone: amiga.telefone }
+            : undefined,
       });
       setBookingId(id);
       sendConfirmationEmail({
@@ -495,6 +516,8 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         servico: service.name,
         data: dateLabel,
         horario: selectedTime,
+        amigaNome: amiga?.nome,
+        amigaTelefone: amiga?.telefone,
       });
       setWhatsappLink(
         buildWhatsappConfirmationLink({
@@ -502,6 +525,8 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           dateLabel,
           time: selectedTime,
           clientName: user.displayName,
+          amigaNome: amiga?.nome,
+          amigaTelefone: amiga?.telefone,
         })
       );
       setSubStep(2);
@@ -585,7 +610,13 @@ function AgendamentoTab({ user, onGoToEntrar }) {
       {subStep === 0 && (
         <ServiceStep
           selected={service}
-          onSelect={(s) => { setService(s); setSessoesPacote([]); setSelectedDay(null); setSelectedTime(null); }}
+          onSelect={(s) => {
+            setService(s);
+            setSessoesPacote([]);
+            setSelectedDay(null);
+            setSelectedTime(null);
+            setAmigaInfo(null);
+          }}
           onNext={() => setSubStep(1)}
         />
       )}
@@ -631,7 +662,7 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           setSelectedTime={setSelectedTime}
           phone={phone}
           setPhone={setPhone}
-          onNext={handleConfirm}
+          onNext={handleConfirmClick}
           onBack={() => setSubStep(0)}
           saving={saving}
         />
@@ -659,6 +690,17 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           whatsappLink={whatsappLink}
           bookingId={bookingId}
           onBack={() => setSubStep(1)}
+        />
+      )}
+
+      {showAmigaPopup && (
+        <AmigaPopup
+          onClose={() => setShowAmigaPopup(false)}
+          onConfirm={(dados) => {
+            setAmigaInfo(dados);
+            setShowAmigaPopup(false);
+            handleConfirm(dados);
+          }}
         />
       )}
     </div>

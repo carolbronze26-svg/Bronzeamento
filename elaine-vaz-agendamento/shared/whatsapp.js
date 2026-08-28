@@ -88,3 +88,18 @@ export function buildWhatsappPacoteLink({ sessoes, clientName }) {
     `• Nome: ${clientName || ""}`;
   return `https://wa.me/${CAROL_WHATSAPP}?text=${encodeURIComponent(text)}`;
 }
+export function buildWhatsappConfirmationLink(booking) {
+  const { serviceName, dateLabel, time, clientName, amigaNome, amigaTelefone } = booking;
+  let text =
+    `Olá! Gostaria de confirmar meu agendamento:\n` +
+    `• Serviço: ${serviceName}\n` +
+    `• Data: ${dateLabel}\n` +
+    `• Horário: ${time}\n` +
+    `• Nome: ${clientName || ""}`;
+
+  if (amigaNome) {
+    text += `\n\n👯 Amiga da promoção:\n• Nome: ${amigaNome}\n• WhatsApp: ${amigaTelefone || ""}`;
+  }
+
+  return `https://wa.me/${CAROL_WHATSAPP}?text=${encodeURIComponent(text)}`;
+}

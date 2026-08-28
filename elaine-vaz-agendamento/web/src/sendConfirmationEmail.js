@@ -42,3 +42,19 @@ export async function sendPackageConfirmationEmail({ nome, email, telefone, sess
     console.error("Erro ao enviar e-mail de confirmação do pacote:", err);
   }
 }
+export async function sendConfirmationEmail({ nome, email, telefone, servico, data, horario, amigaNome, amigaTelefone }) {
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+      nome: nome || "",
+      email: email || "",
+      telefone: telefone || "",
+      servico: servico || "",
+      data: data || "",
+      horario: horario || "",
+      assunto: `Agendamento - ${nome || ""}`,
+      mensagem_html: buildConfirmationEmailHtml({ nome, email, telefone, servico, data, horario, amigaNome, amigaTelefone }),
+    });
+  } catch (err) {
+    console.error("Erro ao enviar e-mail de confirmação:", err);
+  }
+}
