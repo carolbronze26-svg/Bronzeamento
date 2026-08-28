@@ -1,16 +1,9 @@
 import { useState, useEffect } from "react";
 
 export default function PromoPopup() {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(true);
 
-  useEffect(() => {
-    const jaViu = sessionStorage.getItem("promoAmigaChamaAmigaViu");
-    if (!jaViu) {
-      setOpen(true);
-      sessionStorage.setItem("promoAmigaChamaAmigaViu", "1");
-    }
-  }, []);
-
+  
   if (!open) return null;
 
   return (
