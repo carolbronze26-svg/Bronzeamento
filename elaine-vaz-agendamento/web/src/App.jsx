@@ -692,7 +692,7 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           onBack={() => setSubStep(1)}
         />
       )}
-      {showAmigaPopup && (
+            {showAmigaPopup && (
         <AmigaPopup
           onClose={() => setShowAmigaPopup(false)}
           onConfirm={(dados) => {
@@ -706,7 +706,9 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           }}
         />
       )}
-
+    </div>
+  );
+}
 
 function MiniProgress({ step, steps }) {
   return (
