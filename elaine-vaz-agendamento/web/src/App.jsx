@@ -13,6 +13,7 @@ import { buildWhatsappConfirmationLink, buildWhatsappPacoteLink } from "../../sh
 import { sendConfirmationEmail, sendPackageConfirmationEmail } from "./sendConfirmationEmail";
 import { ReviewCard } from "./ReviewsPage.jsx";
 import "./styles.css";
+import PromoPopup from "./PromoPopup";
 
 const DAYS = ["D", "S", "T", "Q", "Q", "S", "S"];
 const CAROL_WHATSAPP = "5511931101976";
@@ -126,6 +127,7 @@ export default function App() {
 
   return (
     <div className="page">
+       <PromoPopup />
       <div className="frame">
         {canInstall && !dismissedInstall && (
           <InstallBanner onInstall={promptInstall} onDismiss={() => setDismissedInstall(true)} />
