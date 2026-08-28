@@ -664,28 +664,37 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           handleConfirmPacote();
             }}
 
+      {subStep === 1 && isPacote && (
+  <PackageDateTimeStep
+    cells={cells}
+    monthLabel={monthLabel}
+    selectedDay={selectedDay}
+    setSelectedDay={handleSelectDay}
+    isSunday={isSunday}
+    isClosed={isClosed}
+    isDisabled={isDisabled}
+    onPrevMonth={() => setMonthOffset((m) => m - 1)}
+    onNextMonth={() => setMonthOffset((m) => m + 1)}
+    slots={availableSlots}
+    selectedTime={selectedTime}
+    setSelectedTime={setSelectedTime}
+    sessoesPacote={sessoesPacote}
+    onAddSessao={handleAddSessaoPacote}
+    onRemoveSessao={handleRemoveSessaoPacote}
+    phone={phone}
+    setPhone={setPhone}
+    onNext={() => {
+      if (isAmigaPromo && !amigaInfo) {
+        setShowAmigaPopup(true);
+        return;
+      }
+      handleConfirmPacote();
+    }}
+    onBack={() => setSubStep(0)}
+    saving={saving}
+  />
+)}
 
-      {subStep === 1 && !isPacote && (
-        <DateTimeStep
-          cells={cells}
-          monthLabel={monthLabel}
-          selectedDay={selectedDay}
-          setSelectedDay={handleSelectDay}
-          isSunday={isSunday}
-          isClosed={isClosed}
-          isDisabled={isDisabled}
-          onPrevMonth={() => setMonthOffset((m) => m - 1)}
-          onNextMonth={() => setMonthOffset((m) => m + 1)}
-          slots={availableSlots}
-          selectedTime={selectedTime}
-          setSelectedTime={setSelectedTime}
-          phone={phone}
-          setPhone={setPhone}
-          onNext={handleConfirmClick}
-          onBack={() => setSubStep(0)}
-          saving={saving}
-        />
-      )}
 
       {subStep === 2 && isPacote && (
         <PackageConfirmStep
