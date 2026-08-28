@@ -637,7 +637,7 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         />
       )}
 
-      {subStep === 1 && isPacote && (
+            {subStep === 1 && isPacote && (
         <PackageDateTimeStep
           cells={cells}
           monthLabel={monthLabel}
@@ -657,44 +657,16 @@ function AgendamentoTab({ user, onGoToEntrar }) {
           phone={phone}
           setPhone={setPhone}
           onNext={() => {
-        if (isAmigaPromo && !amigaInfo) {
-         setShowAmigaPopup(true);
-         return;
-              }
-          handleConfirmPacote();
-            }}
-
-      {subStep === 1 && isPacote && (
-  <PackageDateTimeStep
-    cells={cells}
-    monthLabel={monthLabel}
-    selectedDay={selectedDay}
-    setSelectedDay={handleSelectDay}
-    isSunday={isSunday}
-    isClosed={isClosed}
-    isDisabled={isDisabled}
-    onPrevMonth={() => setMonthOffset((m) => m - 1)}
-    onNextMonth={() => setMonthOffset((m) => m + 1)}
-    slots={availableSlots}
-    selectedTime={selectedTime}
-    setSelectedTime={setSelectedTime}
-    sessoesPacote={sessoesPacote}
-    onAddSessao={handleAddSessaoPacote}
-    onRemoveSessao={handleRemoveSessaoPacote}
-    phone={phone}
-    setPhone={setPhone}
-    onNext={() => {
-      if (isAmigaPromo && !amigaInfo) {
-        setShowAmigaPopup(true);
-        return;
-      }
-      handleConfirmPacote();
-    }}
-    onBack={() => setSubStep(0)}
-    saving={saving}
-  />
-)}
-
+            if (isAmigaPromo && !amigaInfo) {
+              setShowAmigaPopup(true);
+              return;
+            }
+            handleConfirmPacote();
+          }}
+          onBack={() => setSubStep(0)}
+          saving={saving}
+        />
+      )}
 
       {subStep === 2 && isPacote && (
         <PackageConfirmStep
@@ -721,19 +693,19 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         />
       )}
       {showAmigaPopup && (
-  <AmigaPopup
-    onClose={() => setShowAmigaPopup(false)}
-    onConfirm={(dados) => {
-      setAmigaInfo(dados);
-      setShowAmigaPopup(false);
-      if (isPacote) {
-        handleConfirmPacote(dados);
-      } else {
-        handleConfirm(dados);
-      }
-    }}
-  />
-)}
+        <AmigaPopup
+          onClose={() => setShowAmigaPopup(false)}
+          onConfirm={(dados) => {
+            setAmigaInfo(dados);
+            setShowAmigaPopup(false);
+            if (isPacote) {
+              handleConfirmPacote(dados);
+            } else {
+              handleConfirm(dados);
+            }
+          }}
+        />
+      )}
 
 
 function MiniProgress({ step, steps }) {
