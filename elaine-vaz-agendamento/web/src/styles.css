@@ -117,10 +117,22 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   padding: 14px 16px; cursor: pointer; transition: border-color 200ms ease, background 200ms ease; width: 100%;
 }
 .serviceName { color: #F3ECDD; font-size: 14.5px; font-weight: 600; margin-bottom: 4px; }
+
+/* ===== AJUSTE 1: tag de promoção deixou de ter fundo amarelo chamativo =====
+   Antes: background: #C9A24B (dourado forte) chamando muita atenção.
+   Agora: discreta, com borda fina e texto dourado, sem "bloco" amarelo. */
 .serviceTag {
-  margin-left: 8px; font-size: 9.5px; font-weight: 700; color: #0B0A09; background: #C9A24B;
-  padding: 2px 7px; border-radius: 20px; letter-spacing: 0.2px;
+  margin-left: 8px;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #E8CE85;
+  background: transparent;
+  border: 1px solid #4A3B1E;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0.2px;
 }
+
 .serviceMeta { color: #8A8272; font-size: 12px; }
 .radioOuter {
   width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #4A4436;
@@ -463,6 +475,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 }
 .reportStatCardDelta.positive { color: #6FCF97; }
 .reportStatCardDelta.negative { color: #E07856; }
+
 /* Ranking de serviços mais vendidos */
 .topServicesList {
   display: flex;
@@ -500,11 +513,9 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   font-weight: 700;
   white-space: nowrap;
 }
+
 /* ============================================================
-   Adicionar este bloco ao final do styles.css do projeto.
-   Substitui totalmente a versão anterior do CSS do PromoPopup.
-   Agora com "palco" fixo: máquina e imagens ocupam o mesmo
-   espaço, uma sobre a outra, com crossfade real entre elas.
+   PROMO POPUP — versão corrigida
    ============================================================ */
 
 .promoAnimatedBox {
@@ -512,14 +523,11 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   overflow: hidden;
 }
 
-/* na fase da máquina, sem fundo/sombra do card — só a imagem flutuando */
 .promoAnimatedBox.isMaquina {
   background: transparent;
   box-shadow: none;
 }
 
-/* palco: todas as camadas (máquina + imagens) ficam empilhadas aqui,
-   ocupando exatamente o mesmo espaço — isso garante o crossfade */
 .promoStage {
   position: relative;
   width: 100%;
@@ -546,8 +554,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   pointer-events: none;
 }
 
-/* frame do tamanho exato da imagem, pra o brilho/flash ficarem
-   colados na máquina e não espalhados pelo palco todo */
 .promoMachineFrame {
   position: relative;
   display: inline-block;
@@ -571,13 +577,21 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   animation: promoFlashPop 8s ease forwards;
 }
 
-/* --- Fases 2 e 3: imagens empilhadas no mesmo palco --- */
+/* ===== AJUSTE 2: tamanho das imagens controlado =====
+   Antes: object-fit: cover deixava as imagens estourarem/cortarem
+   de forma imprevisível dependendo da proporção do arquivo enviado.
+   Agora: object-fit: contain + fundo escuro no palco, garantindo
+   que qualquer imagem (retrato, paisagem, quadrada) caiba certinho
+   sem distorcer nem cortar partes importantes. */
 .promoStackedImg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  background: #0B0A09;
   display: block;
 }
 
@@ -617,6 +631,7 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   92%  { opacity: 0.9; }
   100% { opacity: 0; }
 }
+
 .promoOverlay {
   position: fixed;
   inset: 0;
@@ -639,12 +654,17 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7);
 }
 
+/* ===== AJUSTE 3: botão de fechar sempre visível =====
+   Antes: o botão podia ficar "escondido" visualmente durante a fase
+   da máquina (isMaquina) por estar sem controle explícito de opacity/z-index
+   em todas as fases. Agora ele é forçado a aparecer em qualquer fase
+   (isMaquina, isCondicao, isFinal), com z-index alto garantido. */
 .promoCloseBtn {
   position: absolute;
   top: 10px;
   right: 10px;
-  z-index: 10;
-  background: rgba(0,0,0,0.5);
+  z-index: 20;
+  background: rgba(0,0,0,0.55);
   border: none;
   color: #F3ECDD;
   width: 30px;
@@ -655,4 +675,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   display: flex;
   align-items: center;
   justify-content: center;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  visibility: visible !important;
+  transition: none !important;
 }
