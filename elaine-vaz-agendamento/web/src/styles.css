@@ -617,3 +617,42 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   92%  { opacity: 0.9; }
   100% { opacity: 0; }
 }
+.promoOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: 16px;
+}
+
+.promoBox {
+  position: relative;
+  width: 100%;
+  max-width: 340px;
+  background: #0F0C09;
+  border-radius: 20px;
+  border: 1px solid #221D14;
+  overflow: hidden;
+  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7);
+}
+
+.promoCloseBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  color: #F3ECDD;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
