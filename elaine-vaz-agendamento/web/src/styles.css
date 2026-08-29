@@ -500,44 +500,120 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   font-weight: 700;
   white-space: nowrap;
 }
-.promoOverlay {
-  position: fixed;
+/* ============================================================
+   Adicionar este bloco ao final do styles.css do projeto.
+   Substitui totalmente a versão anterior do CSS do PromoPopup.
+   Agora com "palco" fixo: máquina e imagens ocupam o mesmo
+   espaço, uma sobre a outra, com crossfade real entre elas.
+   ============================================================ */
+
+.promoAnimatedBox {
+  position: relative;
+  overflow: hidden;
+}
+
+/* na fase da máquina, sem fundo/sombra do card — só a imagem flutuando */
+.promoAnimatedBox.isMaquina {
+  background: transparent;
+  box-shadow: none;
+}
+
+/* palco: todas as camadas (máquina + imagens) ficam empilhadas aqui,
+   ocupando exatamente o mesmo espaço — isso garante o crossfade */
+.promoStage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 2 / 3;
+  overflow: hidden;
+}
+
+/* --- Fase 1: máquina de bronzeamento --- */
+.promoMachineWrap {
+  position: absolute;
   inset: 0;
-  background: rgba(0,0,0,0.75);
   display: flex;
   align-items: center;
   justify-content: center;
-  z-index: 9999;
-  padding: 20px;
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 0.9s ease, transform 0.9s ease;
 }
-.promoBox {
+
+.promoAnimatedBox.isCondicao .promoMachineWrap,
+.promoAnimatedBox.isFinal .promoMachineWrap {
+  opacity: 0;
+  transform: scale(0.82);
+  pointer-events: none;
+}
+
+/* frame do tamanho exato da imagem, pra o brilho/flash ficarem
+   colados na máquina e não espalhados pelo palco todo */
+.promoMachineFrame {
   position: relative;
-  max-width: 380px;
-  width: 100%;
-  border-radius: 16px;
-  overflow: hidden;
-  animation: promoIn 0.25s ease;
+  display: inline-block;
+  width: 62%;
+  max-width: 220px;
+  line-height: 0;
 }
-.promoImg {
+
+.promoMachineImg {
   width: 100%;
   display: block;
-  border-radius: 16px;
+  animation: promoMachineGlow 8s ease-in-out forwards;
+  transform-origin: center bottom;
 }
-.promoCloseBtn {
+
+.promoFlash {
   position: absolute;
-  top: 10px;
-  right: 10px;
-  background: rgba(0,0,0,0.6);
-  color: #fff;
-  border: none;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  font-size: 16px;
-  cursor: pointer;
-  z-index: 10;
+  inset: -20px;
+  background: radial-gradient(circle, #eaf6ff 0%, rgba(234, 246, 255, 0) 70%);
+  opacity: 0;
+  animation: promoFlashPop 8s ease forwards;
 }
-@keyframes promoIn {
-  from { opacity: 0; transform: scale(0.9); }
-  to { opacity: 1; transform: scale(1); }
+
+/* --- Fases 2 e 3: imagens empilhadas no mesmo palco --- */
+.promoStackedImg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.promoImgReveal {
+  animation: promoImgFadeIn 1s ease forwards;
+}
+
+.promoImgFadeOut {
+  animation: promoImgFadeOut 0.9s ease forwards;
+}
+
+@keyframes promoImgFadeIn {
+  0%   { opacity: 0; transform: scale(1.06); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes promoImgFadeOut {
+  0%   { opacity: 1; transform: scale(1); }
+  100% { opacity: 0; transform: scale(0.97); }
+}
+
+@keyframes promoMachineGlow {
+  0%   { opacity: 0; filter: brightness(0.7) drop-shadow(0 0 0px rgba(120, 200, 255, 0)); transform: scale(0.15) translateY(30px); }
+  10%  { opacity: 1; filter: brightness(1.1) drop-shadow(0 0 20px rgba(120, 200, 255, 0.7)); transform: scale(1.06) translateY(0); }
+  16%  { filter: brightness(1.35) drop-shadow(0 0 28px rgba(120, 200, 255, 0.9)); transform: scale(1); }
+  30%  { filter: brightness(1.05) drop-shadow(0 0 10px rgba(120, 200, 255, 0.5)); transform: scale(1); }
+  45%  { filter: brightness(1.35) drop-shadow(0 0 28px rgba(120, 200, 255, 0.9)); transform: scale(1.015); }
+  60%  { filter: brightness(1.05) drop-shadow(0 0 10px rgba(120, 200, 255, 0.5)); transform: scale(1); }
+  75%  { filter: brightness(1.35) drop-shadow(0 0 28px rgba(120, 200, 255, 0.9)); transform: scale(1.015); }
+  90%  { filter: brightness(1.05) drop-shadow(0 0 10px rgba(120, 200, 255, 0.5)); transform: scale(1); }
+  100% { opacity: 1; filter: brightness(1.1) drop-shadow(0 0 14px rgba(120, 200, 255, 0.6)); transform: scale(1); }
+}
+
+@keyframes promoFlashPop {
+  0%   { opacity: 0; }
+  88%  { opacity: 0; }
+  92%  { opacity: 0.9; }
+  100% { opacity: 0; }
 }
