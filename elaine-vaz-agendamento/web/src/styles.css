@@ -117,22 +117,10 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   padding: 14px 16px; cursor: pointer; transition: border-color 200ms ease, background 200ms ease; width: 100%;
 }
 .serviceName { color: #F3ECDD; font-size: 14.5px; font-weight: 600; margin-bottom: 4px; }
-
-/* ===== AJUSTE 1: tag de promoção deixou de ter fundo amarelo chamativo =====
-   Antes: background: #C9A24B (dourado forte) chamando muita atenção.
-   Agora: discreta, com borda fina e texto dourado, sem "bloco" amarelo. */
 .serviceTag {
-  margin-left: 8px;
-  font-size: 9.5px;
-  font-weight: 700;
-  color: #E8CE85;
-  background: transparent;
-  border: 1px solid #4A3B1E;
-  padding: 2px 7px;
-  border-radius: 20px;
-  letter-spacing: 0.2px;
+  margin-left: 8px; font-size: 9.5px; font-weight: 700; color: #0B0A09; background: #C9A24B;
+  padding: 2px 7px; border-radius: 20px; letter-spacing: 0.2px;
 }
-
 .serviceMeta { color: #8A8272; font-size: 12px; }
 .radioOuter {
   width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid #4A4436;
@@ -475,7 +463,6 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
 }
 .reportStatCardDelta.positive { color: #6FCF97; }
 .reportStatCardDelta.negative { color: #E07856; }
-
 /* Ranking de serviços mais vendidos */
 .topServicesList {
   display: flex;
@@ -513,9 +500,57 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   font-weight: 700;
   white-space: nowrap;
 }
+/* ============================================================
+   Classes base do popup (faltavam no arquivo) — overlay que
+   cobre a tela toda, o card centralizado e o botão de fechar.
+   ============================================================ */
+
+.promoOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(6, 5, 3, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.promoBox {
+  position: relative;
+  width: 100%;
+  max-width: 320px;
+  background: #151109;
+  border: 1px solid #2A241A;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
+  overflow: hidden;
+}
+
+.promoCloseBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 10;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid #2A241A;
+  color: #E8CE85;
+  font-size: 13px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.promoImg {
+  width: 100%;
+  display: block;
+}
 
 /* ============================================================
-   PROMO POPUP — versão corrigida
+   Animação do PromoPopup ("palco" fixo): máquina e imagens
+   ocupam o mesmo espaço, uma sobre a outra, com crossfade real.
    ============================================================ */
 
 .promoAnimatedBox {
@@ -523,11 +558,14 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   overflow: hidden;
 }
 
+/* na fase da máquina, sem fundo/sombra do card — só a imagem flutuando */
 .promoAnimatedBox.isMaquina {
   background: transparent;
   box-shadow: none;
 }
 
+/* palco: todas as camadas (máquina + imagens) ficam empilhadas aqui,
+   ocupando exatamente o mesmo espaço — isso garante o crossfade */
 .promoStage {
   position: relative;
   width: 100%;
@@ -554,6 +592,8 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   pointer-events: none;
 }
 
+/* frame do tamanho exato da imagem, pra o brilho/flash ficarem
+   colados na máquina e não espalhados pelo palco todo */
 .promoMachineFrame {
   position: relative;
   display: inline-block;
@@ -577,21 +617,13 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   animation: promoFlashPop 8s ease forwards;
 }
 
-/* ===== AJUSTE 2: tamanho das imagens controlado =====
-   Antes: object-fit: cover deixava as imagens estourarem/cortarem
-   de forma imprevisível dependendo da proporção do arquivo enviado.
-   Agora: object-fit: contain + fundo escuro no palco, garantindo
-   que qualquer imagem (retrato, paisagem, quadrada) caiba certinho
-   sem distorcer nem cortar partes importantes. */
+/* --- Fases 2 e 3: imagens empilhadas no mesmo palco --- */
 .promoStackedImg {
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
-  max-width: 100%;
-  max-height: 100%;
-  object-fit: contain;
-  background: #0B0A09;
+  object-fit: cover;
   display: block;
 }
 
@@ -631,52 +663,80 @@ button:focus-visible, a:focus-visible { outline: 2px solid #E8CE85; outline-offs
   92%  { opacity: 0.9; }
   100% { opacity: 0; }
 }
+/* ============================================================
+   Cartão Fidelidade
+   ============================================================ */
 
-.promoOverlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.75);
+.loyaltyMiniCard {
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 9999;
-  padding: 16px;
-}
-
-.promoBox {
-  position: relative;
-  width: 100%;
-  max-width: 340px;
-  background: #0F0C09;
-  border-radius: 20px;
-  border: 1px solid #221D14;
-  overflow: hidden;
-  box-shadow: 0 30px 60px -20px rgba(0,0,0,0.7);
-}
-
-/* ===== AJUSTE 3: botão de fechar sempre visível =====
-   Antes: o botão podia ficar "escondido" visualmente durante a fase
-   da máquina (isMaquina) por estar sem controle explícito de opacity/z-index
-   em todas as fases. Agora ele é forçado a aparecer em qualquer fase
-   (isMaquina, isCondicao, isFinal), com z-index alto garantido. */
-.promoCloseBtn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  z-index: 20;
-  background: rgba(0,0,0,0.55);
-  border: none;
+  gap: 8px;
+  flex-wrap: wrap;
+  background: #151109;
+  border: 1px solid #2A241A;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin-bottom: 14px;
+  font-size: 12.5px;
   color: #F3ECDD;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
-  font-size: 14px;
-  cursor: pointer;
+}
+
+.loyaltyMiniText strong { color: #E8CE85; }
+
+.loyaltyMiniPrize {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+  background: linear-gradient(135deg, #E8CE85, #C9A24B);
+  color: #0B0A09;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 3px 10px;
+  font-size: 11px;
+}
+
+.loyaltyCard {
+  background: #131009;
+  border: 1px solid #221D14;
+  border-radius: 16px;
+  padding: 18px;
+}
+
+.loyaltyStamps {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+}
+
+.loyaltyStamp {
+  aspect-ratio: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  opacity: 1 !important;
-  pointer-events: auto !important;
-  visibility: visible !important;
-  transition: none !important;
+  border-radius: 50%;
+  border: 1.5px dashed #4A4436;
+  color: #6B6459;
+  font-size: 13px;
+  font-weight: 700;
+  background: transparent;
+  transition: all 0.3s ease;
+}
+
+.loyaltyStamp.isFilled {
+  border: none;
+  background: linear-gradient(135deg, #E8CE85, #C9A24B);
+  box-shadow: 0 0 14px rgba(232, 206, 133, 0.5);
+}
+
+.loyaltyPrizeBanner {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: linear-gradient(135deg, #E8CE85, #C9A24B);
+  color: #0B0A09;
+  border-radius: 14px;
+  padding: 14px 16px;
+  margin-top: 14px;
+  font-size: 13px;
 }
