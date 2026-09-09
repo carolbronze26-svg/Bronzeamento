@@ -11,10 +11,12 @@ service cloud.firestore {
              ];
     }
 
-    // Cada cliente só pode ler/editar o próprio perfil; admin lê todos
+    // Cada cliente só pode ler/editar o próprio perfil; admin lê e
+    // também escreve (necessário pra atualizar os selos de fidelidade
+    // quando marca um atendimento como concluído no painel).
     match /usuarios/{userId} {
       allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
-      allow write: if request.auth != null && request.auth.uid == userId;
+      allow write: if request.auth != null && (request.auth.uid == userId || isAdmin());
     }
 
     // Serviços são públicos para leitura (lista fixa, editada só pela equipe)
@@ -27,7 +29,8 @@ service cloud.firestore {
     // Cliente também pode atualizar o PRÓPRIO agendamento, mas só pra
     // cancelar, confirmar presença ou reagendar — nunca marcar como
     // "confirmado" (isso é reservado ao admin, que usa esse status pra
-    // dizer que o atendimento foi concluído de verdade).
+    // dizer que o atendimento foi concluído de verdade e soma o selo
+    // de fidelidade do cliente).
     match /agendamentos/{agendamentoId} {
       allow create: if request.auth != null
                     && request.resource.data.usuarioId == request.auth.uid;
