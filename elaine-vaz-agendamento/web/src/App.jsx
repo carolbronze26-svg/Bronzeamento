@@ -2,9 +2,10 @@ import React, { useMemo, useState, useEffect } from "react";
 import {
   Chrome, Sun, Moon, Check, ChevronLeft, ChevronRight, MessageCircle, Clock,
   Download, X, LogIn, LogOut, CalendarDays, Star, Instagram, MapPin, Phone,
-  Info, ListChecks, AlertCircle, CreditCard,
+  Info, ListChecks, AlertCircle, CreditCard, Award, Gift,
 } from "lucide-react";
 import { useAuth } from "./hooks/useAuth";
+import { useLoyalty } from "./hooks/useLoyalty";
 import { useCreateBooking, useOccupiedSlots, useMyBookings, useBookingActions } from "./hooks/useBooking";
 import { useBlockedDates, isDiaTodoBloqueado, horariosBloqueados } from "./hooks/useBlockedDates";
 import { useReviews } from "./hooks/useReviews";
@@ -26,6 +27,7 @@ const TABS = [
   { id: "entrar", label: "Entrar", icon: LogIn },
   { id: "agendamento", label: "Agendamento", icon: CalendarDays },
   { id: "agendado", label: "Agendado", icon: ListChecks },
+  { id: "fidelidade", label: "Fidelidade", icon: Award },
   { id: "avaliacao", label: "Avaliação", icon: Star },
   { id: "social", label: "Rede Social", icon: Instagram },
   { id: "localizacao", label: "Localização", icon: MapPin },
@@ -107,6 +109,7 @@ export default function App() {
   sendWhatsAppOtp,     // novo
 } = useAuth();
   const { canInstall, promptInstall } = useInstallPrompt();
+  const { selos, premios } = useLoyalty(user);
   const [dismissedInstall, setDismissedInstall] = useState(false);
   const [showIntro, setShowIntro] = useState(() => !sessionStorage.getItem("introSeen"));
   const [activeTab, setActiveTab] = useState(() => {
@@ -156,10 +159,13 @@ export default function App() {
                />
               )}
           {activeTab === "agendamento" && (
-            <AgendamentoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} />
+            <AgendamentoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} selos={selos} premios={premios} />
           )}
           {activeTab === "agendado" && (
             <AgendadoTab user={user} onGoToEntrar={() => setActiveTab("entrar")} />
+          )}
+          {activeTab === "fidelidade" && (
+            <FidelidadeTab user={user} selos={selos} premios={premios} onGoToEntrar={() => setActiveTab("entrar")} />
           )}
           {activeTab === "avaliacao" && <AvaliacaoTab />}
           {activeTab === "social" && <SocialTab />}
@@ -415,7 +421,7 @@ function EntrarTab({ user, onLogin, onLogout, authError, onLoginWhatsApp, onSend
 // ---------------------------------------------------------------------------
 // Aba: Agendamento (serviço → data/hora → confirmar)
 // ---------------------------------------------------------------------------
-function AgendamentoTab({ user, onGoToEntrar }) {
+function AgendamentoTab({ user, onGoToEntrar, selos = 0, premios = 0 }) {
   const { createBooking, saving } = useCreateBooking();
   const { fetchOccupied } = useOccupiedSlots();
   const blockedDates = useBlockedDates();
@@ -622,6 +628,8 @@ function AgendamentoTab({ user, onGoToEntrar }) {
         <AlertCircle size={14} />
         Cancelamentos devem ser feitos com pelo menos 24h de antecedência. Após esse prazo, o serviço será considerado realizado.
       </div>
+
+      {subStep === 0 && <LoyaltyMiniCard selos={selos} premios={premios} />}
 
       {subStep === 0 && (
         <ServiceStep
@@ -1421,6 +1429,83 @@ function RescheduleForm({ item, onSalvar, onCancelar }) {
           {saving ? "Salvando..." : "Confirmar novo horário"}
         </button>
       </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Fidelidade: resumo curto (usado dentro do Agendamento) e aba completa
+// ---------------------------------------------------------------------------
+function LoyaltyMiniCard({ selos, premios }) {
+  return (
+    <div className="loyaltyMiniCard">
+      <Award size={16} color="#E8CE85" />
+      <span className="loyaltyMiniText">
+        <strong>{selos}/10</strong> selos de fidelidade
+      </span>
+      {premios > 0 && (
+        <span className="loyaltyMiniPrize">
+          <Gift size={13} /> {premios} sessão{premios > 1 ? "ões" : ""} grátis disponível{premios > 1 ? "eis" : ""}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function FidelidadeTab({ user, selos, premios, onGoToEntrar }) {
+  if (!user) {
+    return (
+      <div className="stepCenter">
+        <Award size={28} color="#C9A24B" style={{ marginBottom: 14 }} />
+        <h1 className="h1">Cartão fidelidade</h1>
+        <p className="pMuted">Entre com sua conta para ver seus selos.</p>
+        <button className="googleBtn" onClick={onGoToEntrar}>
+          <LogIn size={18} />
+          Ir para Entrar
+        </button>
+      </div>
+    );
+  }
+
+  const faltam = Math.max(0, 10 - selos);
+
+  return (
+    <div>
+      <StepTitle
+        title="Cartão Fidelidade"
+        subtitle={
+          premios > 0
+            ? "Você já tem sessão grátis disponível! 🎉"
+            : faltam === 0
+            ? "Selo completo!"
+            : `Faltam ${faltam} selo${faltam > 1 ? "s" : ""} para sua sessão grátis`
+        }
+      />
+
+      <div className="loyaltyCard">
+        <div className="loyaltyStamps">
+          {Array.from({ length: 10 }).map((_, i) => (
+            <div key={i} className={`loyaltyStamp ${i < selos ? "isFilled" : ""}`}>
+              {i < selos ? <Star size={16} fill="#0B0A09" color="#0B0A09" /> : i + 1}
+            </div>
+          ))}
+        </div>
+        <p className="pMutedSmall" style={{ marginTop: 14 }}>
+          A cada sessão concluída (bronzeamento, manutenção ou sessão do pacote) você ganha 1 selo.
+          Ao completar 10, a próxima sessão sai por nossa conta.
+        </p>
+      </div>
+
+      {premios > 0 && (
+        <div className="loyaltyPrizeBanner">
+          <Gift size={18} color="#0B0A09" />
+          <div>
+            <strong>{premios} sessão{premios > 1 ? "ões" : ""} grátis</strong> disponível{premios > 1 ? "eis" : ""}.
+            <br />
+            Combine com a Carol pelo WhatsApp pra agendar.
+          </div>
+        </div>
+      )}
     </div>
   );
 }
